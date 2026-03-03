@@ -66,9 +66,6 @@ Features:
 - **Pagination** - 35 values per page
 - **Drag and Drop** - Reorder values by dragging rows
 
-```tsx
-// Source: apps/client/src/pages/admin/values/[path].tsx:76-410
-```
 
 ### Creating Values
 
@@ -114,9 +111,6 @@ The system will skip values that are in use and report:
 - Number of values successfully deleted
 - Number of values that failed (in use)
 
-```tsx
-// Source: apps/client/src/pages/admin/values/[path].tsx:200-231
-```
 
 ### Reordering Values
 
@@ -129,9 +123,6 @@ Values can be reordered by drag-and-drop:
 
 A "Saving..." indicator appears during the save operation.
 
-```tsx
-// Source: apps/client/src/pages/admin/values/[path].tsx:160-188
-```
 
 ## Value-Specific Fields
 
@@ -204,6 +195,7 @@ SnailyCAD supports bulk import from external sources:
 JSON format example:
 ```json
 [
+[
   {
     "value": "Ford",
     "hash": "ford"
@@ -214,6 +206,7 @@ JSON format example:
   }
 ]
 ```
+
 
 ## Exporting Values
 

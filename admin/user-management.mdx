@@ -54,9 +54,6 @@ Edit the following user details:
 - **Steam ID** - Optional Steam account identifier
 - **Discord ID** - Optional Discord account identifier
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/users/[id].tsx
-```
 
 ### Managing Permissions
 
@@ -105,9 +102,6 @@ Administrators can disable 2FA for users who have lost access:
 - Click **Disable 2FA** in the user's management page
 - This action is logged in the audit logs
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:637-665
-```
 
 ## User Actions
 
@@ -126,9 +120,6 @@ Generate a temporary password for users who forgot their credentials:
 
 This action also disables the user's 2FA if enabled.
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:397-445
-```
 
 ### Banning Users
 
@@ -175,9 +166,6 @@ Deleting a user will:
 - Disconnect the user from all sessions
 - Log the action in audit logs
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:504-557
-```
 
 ### Whitelist Management
 
@@ -195,9 +183,6 @@ For CADs with whitelisting enabled:
 
 Whitelist status changes trigger Discord webhooks if configured.
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:559-603
-```
 
 ## Pruning Inactive Users
 
@@ -215,9 +200,6 @@ Remove inactive users in bulk:
 - Allows manual selection before deletion
 - Logs the action in audit logs
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:116-190
-```
 
 ## User Search
 

@@ -28,9 +28,6 @@ Each custom field consists of:
 - **Category** - Where the field appears (Citizen, Vehicle, or Weapon)
 - **Citizen Editable** - Whether citizens can edit this field (admin-only otherwise)
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/custom-fields.tsx:27-161
-```
 
 ## Creating Custom Fields
 
@@ -47,9 +44,11 @@ The custom field will immediately appear on the relevant forms.
 
 ```
 Name: Height
+Name: Height
 Category: CITIZEN
 Citizen Editable: ✓ (checked)
 ```
+
 
 After creation, users will see a "Height" field when creating or editing citizens.
 
@@ -72,9 +71,6 @@ After creation, users will see a "Height" field when creating or editing citizen
   Deleting a custom field removes all data stored in that field for all citizens, vehicles, or weapons. This action cannot be undone.
 </Warning>
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-fields-controller.ts:109-138
-```
 
 ## Field Categories
 
@@ -133,9 +129,6 @@ The custom fields list supports:
 - **Pagination** - 35 fields per page
 - **Real-time search** - Results update as you type
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/custom-fields.tsx:103-107
-```
 
 ## Data Storage
 
@@ -143,11 +136,13 @@ Custom field data is stored as key-value pairs:
 
 ```json
 {
+{
   "Height": "6'2\"",
   "Hair Color": "Brown",
   "Eye Color": "Blue"
 }
 ```
+
 
 This allows:
 - Flexible field addition/removal
@@ -197,9 +192,6 @@ All custom field operations are logged:
 
 See [Audit Logs](/admin/audit-logs) to review these actions.
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-fields-controller.ts:62-66
-```
 
 ## API Integration
 
@@ -207,6 +199,7 @@ Custom fields are included in API responses:
 
 **GET /citizen/:id**
 ```json
+{
 {
   "id": "...",
   "name": "John Doe",
@@ -216,6 +209,7 @@ Custom fields are included in API responses:
   }
 }
 ```
+
 
 This allows third-party integrations to access custom field data.
 

@@ -26,9 +26,6 @@ Custom roles combine:
 
 When a role is assigned to a user, they automatically receive all permissions associated with that role.
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:35-179
-```
 
 ## Creating Custom Roles
 
@@ -46,6 +43,7 @@ The role is now available for assignment to users.
 
 ```
 Name: Moderator
+Name: Moderator
 Permissions:
   - ViewUsers
   - ManageUsers
@@ -56,9 +54,7 @@ Discord Role: Moderator (from your Discord server)
 Icon: moderator-badge.png
 ```
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:63-99
-```
+
 
 ## Editing Custom Roles
 
@@ -83,9 +79,6 @@ Icon: moderator-badge.png
   When a role is deleted, users with that role lose the associated permissions. Ensure users have necessary permissions through other roles or individual assignments.
 </Warning>
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:142-170
-```
 
 ## Permission Categories
 
@@ -137,9 +130,6 @@ Permissions are organized into categories:
 - `ManageCourthousePosts` - Courthouse announcements
 - `UsePersonalApiToken` - API token access
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:125-127
-```
 
 ## Discord Role Integration
 
@@ -171,9 +161,6 @@ Icons appear:
 - In role management interfaces
 - In user profiles
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:172-217
-```
 
 ## Assigning Roles to Users
 
@@ -200,6 +187,7 @@ See [User Management](/admin/user-management#managing-roles) for details.
 **Example:**
 ```
 User: John Doe
+User: John Doe
 Roles:
   - Moderator (ViewUsers, BanUsers)
   - Dispatcher (Dispatch, Manage911Calls)
@@ -208,6 +196,7 @@ Roles:
 Total Permissions:
   ViewUsers, BanUsers, Dispatch, Manage911Calls, ManageCadSettings
 ```
+
 
 ## Viewing Role Details
 
@@ -227,9 +216,6 @@ The custom roles list supports:
 - **Pagination** - 35 roles per page
 - **Sorting** - Sort by creation date (newest first)
 
-```tsx
-// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:39-60
-```
 
 ## Common Role Templates
 
@@ -267,9 +253,6 @@ All custom role operations are logged:
 
 See [Audit Logs](/admin/audit-logs) to review these actions.
 
-```tsx
-// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:92-96
-```
 
 ## Best Practices
 

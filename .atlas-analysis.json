@@ -1,0 +1,147 @@
+{
+  "projectType": "saas",
+  "projectName": "SnailyCAD",
+  "projectDescription": "An open-source Computer Aided Dispatch (CAD) and Mobile Data Terminal (MDT) system for FiveM roleplay communities with Discord integration.",
+  "theme": "aspen",
+  "primaryColor": "#3B82F6",
+  "lightColor": "#60A5FA",
+  "darkColor": "#1E40AF",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "features",
+              "installation"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/environment-variables",
+              "configuration/cad-settings",
+              "configuration/permissions"
+            ]
+          },
+          {
+            "group": "User Guides",
+            "pages": [
+              "guides/dispatch",
+              "guides/law-enforcement",
+              "guides/ems-fire",
+              "guides/citizens",
+              "guides/tow-taxi"
+            ]
+          },
+          {
+            "group": "Admin Guide",
+            "pages": [
+              "admin/user-management",
+              "admin/values",
+              "admin/custom-fields",
+              "admin/custom-roles",
+              "admin/audit-logs"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/discord",
+              "integrations/fivem",
+              "integrations/live-map",
+              "integrations/webhooks"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
+          {
+            "group": "Installation Methods",
+            "pages": [
+              "deployment/docker",
+              "deployment/standalone",
+              "deployment/reverse-proxy"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "deployment/updating",
+              "deployment/backup-restore",
+              "deployment/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "developer/getting-started",
+              "developer/architecture",
+              "developer/contributing"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/authentication",
+              "api/citizens",
+              "api/leo",
+              "api/ems-fd",
+              "api/dispatch",
+              "api/admin"
+            ]
+          },
+          {
+            "group": "Database",
+            "pages": [
+              "developer/database-schema",
+              "developer/migrations"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Computer Aided Dispatch (CAD) system",
+    "Mobile Data Terminal (MDT) interface",
+    "Multi-role support (Dispatch, LEO, EMS/Fire, Citizens)",
+    "Call and incident management",
+    "Records management (tickets, arrests, warrants)",
+    "Business and property management",
+    "Discord bot integration",
+    "FiveM server integration",
+    "Live map tracking",
+    "Penal code database",
+    "Vehicle and weapon registration",
+    "Courthouse system (expungement, name changes)",
+    "Admin panel with audit logging"
+  ],
+  "publicApiSurface": [
+    "POST /v1/auth/login",
+    "POST /v1/auth/register",
+    "GET /v1/citizen",
+    "POST /v1/citizen",
+    "GET /v1/leo/incidents",
+    "POST /v1/leo/incidents",
+    "GET /v1/dispatch/calls",
+    "POST /v1/dispatch/calls",
+    "GET /v1/records",
+    "POST /v1/records/create-ticket",
+    "POST /v1/records/create-arrest-report",
+    "GET /v1/admin/manage/users",
+    "POST /v1/admin/values/{path}",
+    "GET /v1/ems-fd/my-deputies",
+    "WebSocket /v1 (real-time updates)"
+  ]
+}

@@ -1,0 +1,300 @@
+---
+title: "Dispatch Interface"
+description: "Learn how to manage 911 calls, units, and incidents from the dispatch interface"
+---
+
+## Overview
+
+The dispatch interface is the central hub for managing emergency calls, coordinating units, and monitoring active incidents. Dispatchers can view all active officers, EMS/Fire deputies, create and assign calls, manage BOLOs, and track incidents in real-time.
+
+## Getting Started
+
+### Going On-Duty as Dispatcher
+
+<Steps>
+  <Step title="Access Dispatch">
+    Navigate to the **Dispatch** page from the main navigation menu.
+  </Step>
+  <Step title="Select Department">
+    Choose your active department from the available options. This determines which units you can manage.
+  </Step>
+  <Step title="View Dashboard">
+    Once on-duty, you'll see the main dispatch dashboard with active units, calls, and incidents.
+  </Step>
+</Steps>
+
+<Tip>
+  The dispatch dashboard layout can be customized by dragging and dropping cards to rearrange them according to your preference.
+</Tip>
+
+## Managing 911 Calls
+
+### Creating a New Call
+
+<Steps>
+  <Step title="Open Call Modal">
+    Click the **Create 911 Call** button in the utility panel or active calls section.
+  </Step>
+  <Step title="Enter Call Details">
+    Fill in the required information:
+    - **Caller name** - Name of the person calling
+    - **Location** - Address or location of the incident
+    - **Description** - Details about the emergency
+    - **Call type** - Select from predefined call types (if configured)
+  </Step>
+  <Step title="Set Priority">
+    Choose the priority level to help units understand the urgency.
+  </Step>
+  <Step title="Create Call">
+    Click **Create** to add the call to the active calls list.
+  </Step>
+</Steps>
+
+### Assigning Units to Calls
+
+<Steps>
+  <Step title="Select Call">
+    Click on an active call in the **Active Calls** section to view details.
+  </Step>
+  <Step title="Assign Units">
+    Choose one or more units from the list of available officers or deputies.
+  </Step>
+  <Step title="Notify Units">
+    Units will be notified in real-time when assigned to the call.
+  </Step>
+</Steps>
+
+### Updating Call Status
+
+You can update calls throughout their lifecycle:
+
+- **Update description** - Add new information as it becomes available
+- **Change priority** - Adjust urgency based on developing situation
+- **End call** - Close the call when the situation is resolved
+- **Attach incidents** - Link the call to an incident for record keeping
+
+<Note>
+  Units assigned to a call can also update the call status and description from their interface.
+</Note>
+
+## Managing Active Units
+
+### Viewing Unit Status
+
+The dispatch interface displays two main unit sections:
+
+- **Active Officers** - Law enforcement units currently on-duty
+- **Active Deputies** - EMS/Fire units currently on-duty
+
+For each unit, you can see:
+- Callsign and name
+- Current status (10-code)
+- Assigned call
+- Assigned incident
+- Department and division
+
+### Updating Unit Status
+
+<Steps>
+  <Step title="Select Unit">
+    Click on a unit in the Active Officers or Active Deputies section.
+  </Step>
+  <Step title="Change Status">
+    Select a new status from the available 10-codes configured in your CAD.
+  </Step>
+  <Step title="Add Notes">
+    Optionally add notes about the status change.
+  </Step>
+</Steps>
+
+### Merging Units
+
+You can merge two units into a combined unit:
+
+<Steps>
+  <Step title="Select Primary Unit">
+    Choose the unit that will be the primary in the merge.
+  </Step>
+  <Step title="Choose Secondary Unit">
+    Select the unit to merge with the primary.
+  </Step>
+  <Step title="Confirm Merge">
+    The units will now operate as a single combined unit with a paired callsign.
+  </Step>
+</Steps>
+
+To unmerge units, select the combined unit and click **Unmerge**.
+
+## Search Features
+
+Dispatchers have access to comprehensive search tools:
+
+### Name Search
+
+<Steps>
+  <Step title="Open Search Modal">
+    Click **Name Search** in the utility panel.
+  </Step>
+  <Step title="Enter Information">
+    Search by first name, last name, or date of birth.
+  </Step>
+  <Step title="View Results">
+    Review the citizen's information including:
+    - Personal details
+    - Licenses and registrations
+    - Warrants and records
+    - Registered vehicles and weapons
+  </Step>
+</Steps>
+
+### Vehicle Search
+
+Search for vehicles by plate number or VIN to view:
+- Owner information
+- Vehicle details (make, model, color)
+- Registration status
+- Insurance status
+- Flags or alerts
+
+### Weapon Search
+
+Search registered weapons by serial number to view ownership and registration details.
+
+### Address Search
+
+Search addresses to view:
+- Resident information
+- Previous calls to the location
+- Address flags or notes
+
+## BOLO Management
+
+### Creating a BOLO (Be On the Lookout)
+
+<Steps>
+  <Step title="Open BOLO Modal">
+    Click **Create BOLO** in the utility panel.
+  </Step>
+  <Step title="Select Type">
+    Choose the BOLO type:
+    - **Person** - For wanted individuals
+    - **Vehicle** - For suspect vehicles
+    - **Other** - For other items or situations
+  </Step>
+  <Step title="Enter Details">
+    Provide description and relevant information.
+  </Step>
+  <Step title="Set Color Code">
+    Optionally assign a color code to indicate severity.
+  </Step>
+  <Step title="Create BOLO">
+    Click **Create** to make the BOLO visible to all units.
+  </Step>
+</Steps>
+
+All active units will see new BOLOs in real-time on their dashboards.
+
+## Incident Management
+
+Incidents are used to track major events and coordinate multiple units:
+
+<Steps>
+  <Step title="Create Incident">
+    Click **Create Incident** in the Active Incidents section.
+  </Step>
+  <Step title="Enter Information">
+    - **Title** - Brief description of the incident
+    - **Description** - Detailed information
+    - **Location** - Address or area
+  </Step>
+  <Step title="Assign Units">
+    Attach relevant officers and deputies to the incident.
+  </Step>
+  <Step title="Link Calls">
+    Associate related 911 calls with the incident.
+  </Step>
+  <Step title="Update Events">
+    Add events and updates as the incident develops.
+  </Step>
+</Steps>
+
+## Signal 100
+
+Signal 100 is an emergency alert that notifies all units:
+
+<Warning>
+  Signal 100 should only be used for serious emergencies requiring all units' attention.
+</Warning>
+
+<Steps>
+  <Step title="Activate Signal 100">
+    Click the **Signal 100** button in the utility panel.
+  </Step>
+  <Step title="Confirm">
+    Confirm the activation - all units will receive an audio and visual alert.
+  </Step>
+  <Step title="Deactivate">
+    Once the emergency is over, click **Signal 100** again to deactivate.
+  </Step>
+</Steps>
+
+## Panic Button Response
+
+When a unit activates their panic button:
+
+1. You'll receive an immediate audio and visual alert
+2. The unit will be highlighted in red
+3. Their last known location and status will be displayed
+4. Assign backup units immediately
+5. Update the unit's status once the situation is resolved
+
+## Tones
+
+Send alert tones to specific departments:
+
+<Steps>
+  <Step title="Open Tones Modal">
+    Click **Tones** in the utility panel.
+  </Step>
+  <Step title="Select Department">
+    Choose LEO, EMS/Fire, or both.
+  </Step>
+  <Step title="Enter Description">
+    Provide information about why tones are being sent.
+  </Step>
+  <Step title="Send Tones">
+    All units in the selected departments will receive the alert.
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep Call Descriptions Updated">
+    Regularly update call descriptions as new information becomes available. This helps responding units stay informed.
+  </Accordion>
+  <Accordion title="Use Proper Priority Levels">
+    Assign appropriate priority levels to calls to ensure urgent situations receive immediate attention.
+  </Accordion>
+  <Accordion title="Monitor Unit Status">
+    Regularly check unit statuses to ensure proper coverage and response times.
+  </Accordion>
+  <Accordion title="Document Incidents Thoroughly">
+    When managing incidents, add detailed events and updates for accurate record keeping.
+  </Accordion>
+  <Accordion title="Coordinate Unit Assignments">
+    Assign appropriate units to calls based on location, availability, and call type.
+  </Accordion>
+</AccordionGroup>
+
+## Keyboard Shortcuts
+
+Dispatchers can use keyboard shortcuts for faster operation:
+
+- **Ctrl/Cmd + K** - Quick search
+- **N** - Open notepad
+- **Esc** - Close open modals
+
+<Tip>
+  Check your CAD's admin settings for additional configured shortcuts.
+</Tip>

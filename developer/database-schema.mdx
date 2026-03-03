@@ -1,0 +1,426 @@
+---
+title: Database schema
+description: Overview of SnailyCAD's database structure and key models
+---
+
+SnailyCAD uses PostgreSQL as its database with Prisma as the ORM. The schema is located at `apps/api/prisma/schema.prisma` and contains over 60 models representing the entire CAD system.
+
+## Database Overview
+
+The database is designed to support:
+- Multi-user CAD system with role-based permissions
+- Complex relationships between citizens, officers, deputies, and records
+- Real-time dispatch operations
+- Comprehensive audit logging
+- Discord and FiveM integrations
+- Customizable values and settings
+
+## Core Models
+
+### CAD & Settings
+
+#### `cad`
+The main CAD instance configuration.
+
+```prisma
+model cad {
+  id                      String    @id @default(cuid())
+  name                    String
+  owner                   User      @relation(fields: [ownerId], references: [id])
+  ownerId                 String
+  areaOfPlay              String?
+  whitelisted             Boolean   @default(false)
+  features                CadFeature[]
+  miscCadSettings         MiscCadSettings?
+  apiToken                ApiToken?
+  discordRoles            DiscordRoles?
+  timeZone                String?   @default("UTC")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+```
+
+**Key Fields:**
+- `name` - CAD instance name
+- `ownerId` - Reference to the CAD owner (User)
+- `whitelisted` - Whether registration requires approval
+- `features` - Enabled/disabled feature flags
+- `miscCadSettings` - General CAD configuration
+- `apiToken` - Public API access token
+
+#### `MiscCadSettings`
+Comprehensive CAD configuration options.
+
+```prisma
+model MiscCadSettings {
+  id                      String    @id @default(cuid())
+  maxCitizensPerUser      Int?
+  maxOfficersPerUser      Int?
+  maxPlateLength          Int       @default(8)
+  callsignTemplate        String    @default("{department}{callsign1} - {callsign2}{division}")
+  signal100Enabled        Boolean   @default(false)
+  liveMapURL              String?
+  jailTimeScale           JailTimeScale?
+  driversLicenseTemplate  String?
+  webhooks                DiscordWebhook[]
+  rawWebhooks             RawWebhook[]
+}
+```
+
+**Configuration includes:**
+- User limits (max citizens, officers per user)
+- Callsign and case number templates
+- License templates and number lengths
+- Timeout settings for calls, incidents, BOLOs
+- Signal 100 configuration
+- Live map integration URLs
+
+### User Management
+
+#### `User`
+Represents a user account with authentication and permissions.
+
+```prisma
+model User {
+  id                    String    @id @default(cuid())
+  username              String    @unique
+  password              String
+  rank                  Rank      @default(USER)
+  isLeo                 Boolean   @default(false)
+  isDispatch            Boolean   @default(false)
+  isEmsFd               Boolean   @default(false)
+  isTow                 Boolean   @default(false)
+  isTaxi                Boolean   @default(false)
+  isSupervisor          Boolean   @default(false)
+  banned                Boolean   @default(false)
+  banReason             String?
+  discordId             String?   @unique
+  steamId               String?   @unique
+  whitelistStatus       WhitelistStatus @default(PENDING)
+  permissions           String[]  @default([])
+  roles                 CustomRole[]
+  apiToken              ApiToken?
+  twoFactorEnabled      Boolean   @default(false)
+  sessions              UserSession[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+```
+
+**Key Features:**
+- Username/password authentication
+- Role-based permissions (rank: USER, ADMIN, OWNER)
+- Department permissions (LEO, Dispatch, EMS/FD, Tow, Taxi)
+- Discord and Steam ID linking
+- Whitelist status management
+- Two-factor authentication support
+- API token access
+
+### Citizens & Characters
+
+#### `Citizen`
+Citizen characters created by users.
+
+```prisma
+model Citizen {
+  id                String    @id @default(cuid())
+  name              String
+  surname           String
+  dateOfBirth       DateTime
+  gender            String
+  ethnicity         String
+  hairColor         String?
+  eyeColor          String?
+  weight            String?
+  height            String?
+  address           String?
+  postal            String?
+  phoneNumber       String?
+  occupation        String?
+  socialSecurityNumber String @unique
+  imageId           String?
+  isDead            Boolean   @default(false)
+  user              User      @relation(fields: [userId], references: [id])
+  userId            String
+  flags             Value[]
+  licenses          Value[]
+  medicalRecords    MedicalRecord[]
+  vehicles          RegisteredVehicle[]
+  weapons           Weapon[]
+  businesses        Business[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+```
+
+**Contains:**
+- Personal information (name, DOB, physical characteristics)
+- Unique social security number
+- Relationships to vehicles, weapons, medical records
+- License management with points system
+- Business ownership
+- Flag associations (gang affiliations, etc.)
+
+### Law Enforcement
+
+#### `Officer`
+Law enforcement officer units.
+
+```prisma
+model Officer {
+  id                String    @id @default(cuid())
+  callsign          String
+  callsign2         String
+  badgeNumber       String
+  department        DepartmentValue @relation(fields: [departmentId], references: [id])
+  departmentId      String
+  divisions         DivisionValue[]
+  rank              String?
+  position          String?
+  citizen           Citizen   @relation(fields: [citizenId], references: [id])
+  citizenId         String
+  user              User      @relation(fields: [userId], references: [id])
+  userId            String
+  statusId          String?
+  status            StatusValue?
+  suspended         Boolean   @default(false)
+  qualifications    QualificationValue[]
+  records           Record[]
+  assignedCalls     Call911[]
+  incidents         LeoIncident[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+```
+
+**Features:**
+- Callsign system (callsign + callsign2)
+- Department and division assignments
+- Rank and position
+- Status tracking (on-duty, off-duty, busy, etc.)
+- Qualifications
+- Links to citizen and user
+- Record creation and call assignments
+
+#### `EmsFdDeputy`
+EMS/Fire department deputy units (similar structure to Officer).
+
+### Dispatch Operations
+
+#### `Call911`
+911 emergency calls.
+
+```prisma
+model Call911 {
+  id                String    @id @default(cuid())
+  name              String
+  description       String
+  descriptionData   Json[]
+  location          String?
+  postal            String?
+  type              String?
+  typeId            String?
+  assignedUnits     CombinedLeoUnit[]
+  position          Position?
+  events            Call911Event[]
+  viaDispatch       Boolean   @default(false)
+  ended             Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+```
+
+**Call Management:**
+- Caller information
+- Location and postal code
+- Call type/nature
+- Unit assignments (officers, deputies)
+- Call events timeline
+- End status tracking
+
+#### `Bolo`
+Be On the Lookout alerts.
+
+```prisma
+model Bolo {
+  id                String    @id @default(cuid())
+  type              BoloType
+  name              String?
+  color             String?
+  plate             String?
+  model             String?
+  description       String
+  officer           Officer?  @relation(fields: [officerId], references: [id])
+  officerId         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+```
+
+### Records Management
+
+#### `Record`
+Criminal records (tickets, arrests, warnings).
+
+```prisma
+model Record {
+  id                String    @id @default(cuid())
+  type              RecordType
+  citizen           Citizen   @relation(fields: [citizenId], references: [id])
+  citizenId         String
+  officer           Officer?  @relation(fields: [officerId], references: [id])
+  officerId         String?
+  violations        Violation[]
+  postal            String?
+  notes             String?
+  status            WarrantStatus?
+  releaseType       ReleaseType?
+  courtDate         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+```
+
+**Record Types:**
+- `WRITTEN_WARNING` - Written warnings
+- `TICKET` - Traffic tickets
+- `ARREST_REPORT` - Arrest reports
+- `WARRANT` - Active warrants
+
+#### `Violation`
+Individual violations within a record.
+
+```prisma
+model Violation {
+  id                String    @id @default(cuid())
+  counts            Int?
+  jailTime          Int?
+  fine              Int?
+  bail              Int?
+  penalCode         PenalCode @relation(fields: [penalCodeId], references: [id])
+  penalCodeId       String
+  record            Record    @relation(fields: [recordId], references: [id])
+  recordId          String
+}
+```
+
+### Values System
+
+#### `Value`
+Customizable value types (departments, vehicles, weapons, etc.).
+
+```prisma
+model Value {
+  id                String    @id @default(cuid())
+  type              ValueType
+  value             String
+  isDisabled        Boolean   @default(false)
+  hash              String?
+  position          Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  // ... type-specific relations
+}
+```
+
+**Value Types:**
+- `DEPARTMENT` - Police/Fire departments
+- `DIVISION` - Department divisions
+- `OFFICER_RANK` - Officer ranks
+- `VEHICLE` - Vehicle types
+- `WEAPON` - Weapon types
+- `LICENSE` - License types
+- `GENDER` - Gender options
+- `ETHNICITY` - Ethnicity options
+- And many more...
+
+### Audit Logging
+
+#### `AuditLog`
+Tracks all administrative actions.
+
+```prisma
+model AuditLog {
+  id                String    @id @default(cuid())
+  action            AuditLogActionType
+  translationKey    String
+  executor          User      @relation(fields: [executorId], references: [id])
+  executorId        String
+  previousData      Json?
+  newData           Json?
+  createdAt         DateTime  @default(now())
+}
+```
+
+**Logged Actions:**
+- User management (create, update, delete, ban)
+- CAD settings changes
+- Value modifications
+- Record expungements
+- Permission changes
+- And more (75+ action types)
+
+## Relationships
+
+### User → Citizen → Officer/Deputy
+```
+User (1) ───→ (N) Citizen (1) ───→ (N) Officer
+                    │
+                    └───→ (N) EmsFdDeputy
+```
+
+### Citizen → Assets
+```
+Citizen (1) ───→ (N) RegisteredVehicle
+           ───→ (N) Weapon
+           ───→ (N) Business
+           ───→ (N) MedicalRecord
+```
+
+### Records & Violations
+```
+Officer (1) ───→ (N) Record (1) ───→ (N) Violation
+                                          │
+                                          └───→ (1) PenalCode
+```
+
+### Dispatch Operations
+```
+Call911 (1) ───→ (N) AssignedUnit (Officer/Deputy)
+           ───→ (N) Call911Event
+```
+
+## Indexes & Performance
+
+Key indexes for performance:
+- `@unique` on usernames, SSNs, license plates, Discord IDs
+- Foreign key indexes on all relations
+- Composite indexes on frequently queried fields
+
+## Migrations
+
+Database migrations are managed by Prisma Migrate:
+
+```bash
+# Create a new migration
+pnpm --filter "@snailycad/api" prisma migrate dev --name migration_name
+
+# Apply pending migrations
+pnpm --filter "@snailycad/api" prisma migrate deploy
+
+# Generate Prisma client
+pnpm --filter "@snailycad/api" prisma generate
+```
+
+Migrations are located at `apps/api/prisma/migrations/`.
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Migrations" icon="database" href="/developer/migrations">
+    Learn about database migrations
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/developer/architecture">
+    System architecture overview
+  </Card>
+</CardGroup>

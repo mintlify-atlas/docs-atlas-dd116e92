@@ -1,0 +1,207 @@
+---
+title: Getting Started
+description: Set up your local development environment for SnailyCAD
+---
+
+This guide will help you set up a local development environment for contributing to SnailyCAD.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** >= 18.16.0
+- **pnpm** 9.0.4 (recommended package manager)
+- **Docker** and **Docker Compose** (for running PostgreSQL)
+- **Git** (for version control)
+
+## Installation Steps
+
+### 1. Fork and Clone the Repository
+
+First, fork the SnailyCAD repository to your GitHub account:
+
+1. Visit [github.com/SnailyCAD/snaily-cadv4](https://github.com/SnailyCAD/snaily-cadv4)
+2. Click the "Fork" button in the top right
+3. Clone your fork locally:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/snaily-cadv4.git
+cd snaily-cadv4
+```
+
+### 2. Install Dependencies
+
+SnailyCAD uses pnpm as its package manager. Install all dependencies with:
+
+```bash
+pnpm install
+```
+
+This will install dependencies for all apps and packages in the monorepo.
+
+### 3. Set Up Environment Variables
+
+Copy the example environment files:
+
+```bash
+node scripts/copy-env.mjs --client --api
+```
+
+This creates `.env` files in both the API and client directories. You'll need to configure these files with your local database credentials and other settings.
+
+### 4. Start the Database
+
+SnailyCAD uses PostgreSQL as its database. Start it using Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+This starts a PostgreSQL container in the background.
+
+### 5. Generate Prisma Client
+
+Generate the Prisma client and run database migrations:
+
+```bash
+pnpm --filter "@snailycad/api" generate
+pnpm --filter "@snailycad/api" prisma migrate deploy
+```
+
+### 6. Start Development Servers
+
+You can now start both the API and client in development mode:
+
+```bash
+pnpm dev
+```
+
+This command:
+- Starts the PostgreSQL database (if not already running)
+- Runs all apps and packages in watch mode with Turbo
+- Hot-reloads on file changes
+
+Alternatively, you can start the API and client separately:
+
+```bash
+# Terminal 1 - API
+pnpm --filter "@snailycad/api" watch
+
+# Terminal 2 - Client
+pnpm --filter "@snailycad/client" dev
+```
+
+### 7. Access the Application
+
+Once the development servers are running:
+
+- **Client**: http://localhost:3000
+- **API**: http://localhost:8080
+- **API Documentation** (Swagger): http://localhost:8080/api-docs
+
+## Common Development Commands
+
+### Build Commands
+
+```bash
+# Build all packages and apps
+pnpm build
+
+# Build specific workspace
+pnpm --filter "@snailycad/client" build
+pnpm --filter "@snailycad/api" build
+```
+
+### Code Quality
+
+```bash
+# Run linter
+pnpm lint
+
+# Fix linting issues
+pnpm lint:fix
+
+# Format code with Prettier
+pnpm format
+
+# Type checking
+pnpm typecheck
+```
+
+### Database Commands
+
+```bash
+# Generate Prisma client
+pnpm --filter "@snailycad/api" generate
+
+# Create a new migration
+pnpm --filter "@snailycad/api" prisma migrate dev --name your-migration-name
+
+# Reset database
+pnpm --filter "@snailycad/api" prisma migrate reset
+
+# Open Prisma Studio (database GUI)
+pnpm --filter "@snailycad/api" prisma studio
+
+# Format Prisma schema
+pnpm --filter "@snailycad/api" format
+```
+
+### Testing
+
+```bash
+# Run tests
+pnpm --filter "@snailycad/api" test
+pnpm --filter "@snailycad/client" test
+
+# Run tests in watch mode
+pnpm --filter "@snailycad/api" test:watch
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+If you encounter port conflicts, you can change the ports in your `.env` files:
+
+- Client: `PORT_CLIENT` (default: 3000)
+- API: `PORT_API` (default: 8080)
+- Database: `DB_PORT` (default: 5432)
+
+### Database Connection Issues
+
+Ensure Docker is running and the PostgreSQL container is healthy:
+
+```bash
+docker ps
+```
+
+You should see a container named `snaily-cad-postgres` with status "Up".
+
+### Prisma Generation Errors
+
+If you encounter Prisma errors, try:
+
+```bash
+# Clean and regenerate
+pnpm --filter "@snailycad/api" prisma generate --force
+```
+
+### Clean Install
+
+If you experience persistent issues, try a clean reinstall:
+
+```bash
+# Remove all node_modules and lock files
+find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
+rm pnpm-lock.yaml
+
+# Reinstall
+pnpm install
+```
+
+## Next Steps
+
+- Learn about the [Architecture](/developer/architecture) of SnailyCAD
+- Review the [Contributing Guidelines](/developer/contributing)
+- Join the [Discord community](https://discord.gg/eGnrPqEH7U) for help and discussions

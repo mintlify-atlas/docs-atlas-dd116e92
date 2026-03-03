@@ -1,0 +1,364 @@
+---
+title: "Installation"
+description: "Quick start guide to get SnailyCAD running on your server"
+---
+
+Get SnailyCAD up and running with this step-by-step installation guide. Choose between Docker (recommended) or standalone installation.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18.16.0 or higher
+  </Card>
+  <Card title="PostgreSQL" icon="database">
+    Version 12 or higher
+  </Card>
+  <Card title="pnpm" icon="box">
+    Version 9.0.4 (package manager)
+  </Card>
+  <Card title="Git" icon="git-alt">
+    For cloning the repository
+  </Card>
+</CardGroup>
+
+<Warning>
+  SnailyCAD requires **Node.js 18.16.0 or higher**. Using an older version will cause installation to fail.
+</Warning>
+
+## Installation Methods
+
+Choose the installation method that works best for your setup:
+
+<CardGroup cols={2}>
+  <Card title="Docker Installation" icon="docker" href="/deployment/docker">
+    Recommended for most users. Easiest setup with containers.
+  </Card>
+  <Card title="Standalone Installation" icon="server" href="/deployment/standalone">
+    Install directly on your server without Docker.
+  </Card>
+</CardGroup>
+
+## Quick Start (Docker)
+
+The fastest way to get started is using Docker Compose.
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/SnailyCAD/snaily-cadv4.git
+    cd snaily-cadv4
+    ```
+  </Step>
+  
+  <Step title="Copy Environment File">
+    ```bash
+    cp .env.example .env
+    ```
+    
+    Edit the `.env` file with your configuration:
+    
+    ```bash
+    # Required: Database credentials
+    POSTGRES_PASSWORD="your-secure-password"
+    POSTGRES_USER="postgres"
+    POSTGRES_DB="snaily-cad-v4"
+    
+    # Required: Security tokens
+    JWT_SECRET="your-random-secret-key"
+    ENCRYPTION_TOKEN="your-32-character-token"
+    
+    # Required: URLs
+    CORS_ORIGIN_URL="http://your-ip:3000"
+    NEXT_PUBLIC_CLIENT_URL="http://your-ip:3000"
+    NEXT_PUBLIC_PROD_ORIGIN="http://your-ip:8080/v1"
+    ```
+  </Step>
+  
+  <Step title="Generate Security Tokens">
+    <Note>
+      **JWT_SECRET**: Any random string of characters
+      
+      **ENCRYPTION_TOKEN**: Must be exactly 32 characters. Generate at [CodeBeautify](https://codebeautify.org/generate-random-string)
+    </Note>
+  </Step>
+  
+  <Step title="Start with Docker Compose">
+    ```bash
+    docker compose -f production.docker-compose.yml up -d
+    ```
+    
+    This will:
+    - Pull the necessary Docker images
+    - Set up PostgreSQL database
+    - Build and start the API and client
+  </Step>
+  
+  <Step title="Access SnailyCAD">
+    Once the containers are running:
+    
+    - **Client**: `http://your-ip:3000`
+    - **API**: `http://your-ip:8080/v1`
+    
+    Create your first account by registering through the web interface.
+  </Step>
+</Steps>
+
+<Note>
+  The first user to register will automatically become the **owner** with full administrative permissions.
+</Note>
+
+## Quick Start (Standalone)
+
+For installation without Docker:
+
+<Steps>
+  <Step title="Clone and Install">
+    ```bash
+    git clone https://github.com/SnailyCAD/snaily-cadv4.git
+    cd snaily-cadv4
+    pnpm install
+    ```
+  </Step>
+  
+  <Step title="Set Up PostgreSQL">
+    Ensure PostgreSQL is installed and running. Create a database:
+    
+    ```sql
+    CREATE DATABASE "snaily-cad-v4";
+    ```
+  </Step>
+  
+  <Step title="Configure Environment">
+    Copy `.env.example` to `.env` and configure:
+    
+    ```bash
+    DB_HOST="localhost"
+    DB_PORT="5432"
+    POSTGRES_PASSWORD="your-password"
+    POSTGRES_USER="postgres"
+    POSTGRES_DB="snaily-cad-v4"
+    
+    JWT_SECRET="your-random-secret"
+    ENCRYPTION_TOKEN="your-32-character-token"
+    
+    CORS_ORIGIN_URL="http://localhost:3000"
+    NEXT_PUBLIC_CLIENT_URL="http://localhost:3000"
+    NEXT_PUBLIC_PROD_ORIGIN="http://localhost:8080/v1"
+    
+    PORT_API=8080
+    PORT_CLIENT=3000
+    NODE_ENV="production"
+    ```
+  </Step>
+  
+  <Step title="Build the Project">
+    ```bash
+    pnpm run build
+    ```
+    
+    This compiles all packages and applications.
+  </Step>
+  
+  <Step title="Start SnailyCAD">
+    ```bash
+    pnpm run start
+    ```
+    
+    Or use the full start script to update and build:
+    
+    ```bash
+    pnpm run full-start
+    ```
+  </Step>
+</Steps>
+
+## Environment Variables Reference
+
+Key environment variables you must configure:
+
+### Database Configuration
+
+| Variable | Description | Example |
+|----------|-------------|----------|
+| `POSTGRES_PASSWORD` | Database password | `mySecurePassword123` |
+| `POSTGRES_USER` | Database username | `postgres` |
+| `POSTGRES_DB` | Database name | `snaily-cad-v4` |
+| `DB_HOST` | Database host | `localhost` or `postgres` (Docker) |
+| `DB_PORT` | Database port | `5432` |
+
+### Security Tokens
+
+| Variable | Description | Example |
+|----------|-------------|----------|
+| `JWT_SECRET` | Random secret for JWT tokens | `my-super-secret-key-123` |
+| `ENCRYPTION_TOKEN` | 32-character encryption key | `Geu2WGypP7irbwa3tCeeKS6YiyluFLep` |
+
+<Warning>
+  **Never share or commit** your `JWT_SECRET` or `ENCRYPTION_TOKEN` to version control. Keep these secure!
+</Warning>
+
+### Application URLs
+
+| Variable | Description | Example |
+|----------|-------------|----------|
+| `CORS_ORIGIN_URL` | Client URL for CORS | `http://192.168.1.100:3000` |
+| `NEXT_PUBLIC_CLIENT_URL` | Public client URL | `http://192.168.1.100:3000` |
+| `NEXT_PUBLIC_PROD_ORIGIN` | API URL | `http://192.168.1.100:8080/v1` |
+
+### Optional Configuration
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `PORT_API` | API server port | `8080` |
+| `PORT_CLIENT` | Client server port | `3000` |
+| `DOMAIN` | Domain (for SSL) | (empty) |
+| `SECURE_COOKIES_FOR_IFRAME` | Enable secure cookies | `false` |
+
+<Note>
+  For a complete environment variables reference, see the [Environment Variables Configuration](/configuration/environment-variables) page.
+</Note>
+
+## Post-Installation Steps
+
+<Steps>
+  <Step title="Create Admin Account">
+    Navigate to `http://your-ip:3000` and register the first account. This account will automatically have owner permissions.
+  </Step>
+  
+  <Step title="Configure CAD Settings">
+    Go to **Admin → Manage → CAD Settings** to:
+    - Set your CAD name
+    - Configure enabled features
+    - Set up registration requirements
+    - Configure authentication options
+  </Step>
+  
+  <Step title="Create Values">
+    Set up basic values in **Admin → Manage → Values**:
+    - Departments (Police, Sheriff, Fire, EMS)
+    - Vehicle types and models
+    - Penal codes
+    - License types
+  </Step>
+  
+  <Step title="Set Up Users">
+    Configure user management:
+    - Enable/disable public registration
+    - Set up custom roles
+    - Configure permissions
+  </Step>
+</Steps>
+
+## Development Installation
+
+For local development with hot-reload:
+
+```bash
+# Start development servers with Docker for database
+pnpm run dev
+```
+
+This command:
+- Starts PostgreSQL in Docker
+- Runs all packages and apps in watch mode
+- Enables hot-reload for development
+
+<Note>
+  Development mode runs on parallel processes and watches for file changes automatically.
+</Note>
+
+## Verification
+
+Verify your installation is working:
+
+<AccordionGroup>
+  <Accordion title="Check API Status">
+    Visit `http://your-ip:8080/v1` - you should see API version info
+  </Accordion>
+  
+  <Accordion title="Check Client Status">
+    Visit `http://your-ip:3000` - you should see the login page
+  </Accordion>
+  
+  <Accordion title="Check Database Connection">
+    If using Docker:
+    ```bash
+    docker compose -f production.docker-compose.yml logs postgres
+    ```
+    
+    Look for "database system is ready to accept connections"
+  </Accordion>
+  
+  <Accordion title="Check Application Logs">
+    If using Docker:
+    ```bash
+    docker compose -f production.docker-compose.yml logs snailycad-client
+    docker compose -f production.docker-compose.yml logs snailycad-api
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Connection Refused Error">
+    Make sure PostgreSQL is running and accessible:
+    - Check `DB_HOST` and `DB_PORT` are correct
+    - Verify PostgreSQL is accepting connections
+    - Check firewall rules
+  </Accordion>
+  
+  <Accordion title="Port Already in Use">
+    Change the ports in `.env`:
+    ```bash
+    PORT_API=8081
+    PORT_CLIENT=3001
+    ```
+    
+    Remember to update `NEXT_PUBLIC_PROD_ORIGIN` to match the new API port.
+  </Accordion>
+  
+  <Accordion title="ENCRYPTION_TOKEN Error">
+    Ensure your `ENCRYPTION_TOKEN` is exactly 32 characters long. Generate a new one at [CodeBeautify](https://codebeautify.org/generate-random-string).
+  </Accordion>
+  
+  <Accordion title="Database Migration Errors">
+    Reset the database (WARNING: deletes all data):
+    ```bash
+    pnpm --filter @snailycad/api prisma migrate reset
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configure Environment Variables" icon="sliders" href="/configuration/environment-variables">
+    Learn about all available configuration options
+  </Card>
+  <Card title="Set Up Integrations" icon="plug" href="/integrations/discord">
+    Connect Discord, FiveM, and other services
+  </Card>
+  <Card title="User Guides" icon="book" href="/guides/dispatch">
+    Learn how to use each module
+  </Card>
+  <Card title="Reverse Proxy Setup" icon="network-wired" href="/deployment/reverse-proxy">
+    Set up SSL with Nginx or Apache
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+If you encounter issues during installation:
+
+- Check the [Troubleshooting Guide](/deployment/troubleshooting)
+- Join our [Discord community](https://discord.gg/eGnrPqEH7U)
+- Search [GitHub Issues](https://github.com/SnailyCAD/snaily-cadv4/issues)
+- Review the complete documentation
+
+<Note>
+  For production deployments, we strongly recommend using a reverse proxy (Nginx/Apache) with SSL certificates for security.
+</Note>

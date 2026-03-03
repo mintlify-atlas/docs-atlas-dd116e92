@@ -1,0 +1,315 @@
+---
+title: Architecture Overview
+description: Understand the technical architecture and structure of SnailyCAD
+---
+
+SnailyCAD is built as a monorepo using modern web technologies. This guide explains the overall architecture, project structure, and key technologies.
+
+## Technology Stack
+
+### Core Technologies
+
+- **TypeScript** - Type-safe JavaScript for all code
+- **Node.js** >= 18.16.0 - Runtime environment
+- **pnpm** - Fast, disk space efficient package manager
+- **Turbo** - High-performance build system for monorepos
+
+### Frontend
+
+- **Next.js 14** - React framework with server-side rendering
+- **React 18** - UI library
+- **TailwindCSS** - Utility-first CSS framework
+- **Formik** - Form management
+- **Zod** - Schema validation
+- **Zustand** - State management
+- **React Query** - Data fetching and caching
+- **Socket.IO Client** - Real-time communication
+
+### Backend
+
+- **Ts.ED** - TypeScript framework for Node.js
+- **Express** - Web server framework
+- **Prisma** - Type-safe ORM
+- **PostgreSQL** - Primary database
+- **Socket.IO** - Real-time bidirectional communication
+- **JWT** - Authentication tokens
+- **bcrypt** - Password hashing
+
+## Monorepo Structure
+
+SnailyCAD uses a monorepo architecture powered by pnpm workspaces and Turbo. This allows multiple packages to share code while maintaining clean separation of concerns.
+
+```
+snaily-cadv4/
+├── apps/
+│   ├── api/          # Backend API server
+│   └── client/       # Frontend Next.js application
+├── packages/
+│   ├── audit-logger/ # Audit logging utilities
+│   ├── config/       # Shared configuration
+│   ├── permissions/  # Permission system
+│   ├── schemas/      # Zod validation schemas
+│   ├── types/        # Shared TypeScript types
+│   ├── ui/           # Shared UI components
+│   └── utils/        # Shared utility functions
+├── scripts/          # Build and utility scripts
+├── .github/          # GitHub Actions workflows
+├── docker-compose.yml
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
+```
+
+## Apps Directory
+
+The `apps/` directory contains the main applications:
+
+### API (`apps/api/`)
+
+The backend API server that handles all business logic, database operations, and integrations.
+
+**Key Directories:**
+
+```
+api/
+├── prisma/
+│   ├── schema.prisma      # Database schema
+│   └── migrations/        # Database migrations
+├── src/
+│   ├── controllers/       # API route controllers
+│   ├── services/          # Business logic services
+│   ├── middlewares/       # Express middlewares
+│   ├── lib/               # Utility libraries
+│   ├── exceptions/        # Custom error classes
+│   ├── migrations/        # Data migrations
+│   └── main.ts            # Application entry point
+├── public/                # Static file uploads
+└── scripts/               # Build scripts
+```
+
+**Key Features:**
+- RESTful API with Ts.ED decorators
+- Real-time updates via Socket.IO
+- Database access via Prisma ORM
+- Authentication & authorization
+- File upload handling with Multer
+- Discord and FiveM integrations
+
+**Scripts:**
+- `pnpm watch` - Development mode with hot reload
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm generate` - Generate Prisma client
+
+### Client (`apps/client/`)
+
+The frontend application built with Next.js that users interact with.
+
+**Key Directories:**
+
+```
+client/
+├── src/
+│   ├── components/        # React components
+│   ├── pages/             # Next.js pages
+│   ├── hooks/             # Custom React hooks
+│   ├── state/             # State management
+│   ├── lib/               # Utility libraries
+│   └── styles/            # Global styles
+├── locales/               # Internationalization files
+│   ├── en/                # English (default)
+│   ├── de-DE/             # German
+│   ├── fr-FR/             # French
+│   └── ...                # Other languages
+├── public/                # Static assets
+└── next.config.mjs        # Next.js configuration
+```
+
+**Key Features:**
+- Server-side rendering (SSR) with Next.js
+- Internationalization (i18n) support
+- Real-time updates via Socket.IO
+- Responsive design with TailwindCSS
+- Form validation with Formik + Zod
+
+**Scripts:**
+- `pnpm dev` - Development mode
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm validate-locales` - Validate translation files
+
+## Packages Directory
+
+The `packages/` directory contains shared libraries used by both apps:
+
+### @snailycad/types
+
+Generated TypeScript types from the Prisma schema. These types represent database models and are used throughout the application.
+
+**Usage:**
+```typescript
+import type { User, Officer } from "@snailycad/types";
+```
+
+### @snailycad/schemas
+
+Zod validation schemas for form validation and API request validation. Shared between client and API to ensure consistency.
+
+**Usage:**
+```typescript
+import { CREATE_USER_SCHEMA } from "@snailycad/schemas";
+```
+
+### @snailycad/permissions
+
+Permission definitions and helper functions for checking user permissions.
+
+**Usage:**
+```typescript
+import { hasPermission, Permissions } from "@snailycad/permissions";
+```
+
+### @snailycad/config
+
+Shared configuration values used by both client and API.
+
+### @snailycad/utils
+
+Utility functions primarily used by the client, including formatters, validators, and helpers.
+
+### @snailycad/ui
+
+Shared React component library used by the client.
+
+### @snailycad/audit-logger
+
+Utilities for logging user actions and system events for audit trails.
+
+## Build System
+
+SnailyCAD uses **Turborepo** to orchestrate builds and manage dependencies between packages.
+
+### Turbo Configuration (`turbo.json`)
+
+Defines task dependencies and caching strategies:
+
+```json
+{
+  "tasks": {
+    "build": {
+      "dependsOn": ["copy-env", "create-images-domain", "validate-locales", "^build"],
+      "outputs": [".next/**", "dist/**"]
+    },
+    "watch": {
+      "persistent": true,
+      "cache": false
+    }
+  }
+}
+```
+
+**Key concepts:**
+- `^build` - Depends on upstream packages being built first
+- `outputs` - Cached build artifacts
+- `dependsOn` - Task execution order
+
+### Workspace Configuration (`pnpm-workspace.yaml`)
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+Defines which directories contain pnpm packages.
+
+## Data Flow
+
+### Request Flow
+
+1. **Client** - User interacts with UI (Next.js)
+2. **API Request** - Client sends HTTP request to API
+3. **Controller** - Ts.ED controller receives request
+4. **Middleware** - Authentication, validation, etc.
+5. **Service** - Business logic processing
+6. **Prisma** - Database query execution
+7. **Response** - Data returned to client
+8. **UI Update** - React re-renders with new data
+
+### Real-Time Updates
+
+1. **Action** - User performs action (e.g., creates a call)
+2. **API** - Saves to database
+3. **Socket.IO** - Server emits event to connected clients
+4. **Client** - Receives event and updates UI in real-time
+
+## Database Architecture
+
+SnailyCAD uses **PostgreSQL** with **Prisma** as the ORM.
+
+### Key Models
+
+- **User** - System users with authentication
+- **Citizen** - In-game characters
+- **Officer** - Law enforcement characters
+- **EmsFdDeputy** - EMS/Fire characters
+- **Call911** - Emergency calls
+- **Record** - Citations, arrests, written warnings
+- **Vehicle** - Registered vehicles
+- **Weapon** - Registered weapons
+- **Value** - Configurable dropdown values (vehicle types, departments, etc.)
+
+### Migrations
+
+Database schema changes are managed through Prisma migrations:
+
+```bash
+# Create a new migration
+pnpm --filter "@snailycad/api" prisma migrate dev --name add_new_field
+
+# Apply migrations in production
+pnpm --filter "@snailycad/api" prisma migrate deploy
+```
+
+## Development Workflow
+
+### Hot Module Replacement (HMR)
+
+During development, changes are automatically detected:
+
+- **Client**: Next.js Fast Refresh updates React components instantly
+- **API**: nodemon restarts the server on file changes
+- **Packages**: Turbo rebuilds and propagates changes
+
+### Type Safety
+
+The entire codebase is TypeScript with strict type checking:
+
+```bash
+pnpm typecheck
+```
+
+This checks types across all packages and apps.
+
+### Code Quality
+
+- **ESLint** - Linting with custom rules
+- **Prettier** - Code formatting
+- **Husky** - Git hooks for pre-commit checks
+- **lint-staged** - Run linters on staged files
+
+## Deployment
+
+SnailyCAD can be deployed using:
+
+- **Docker** - Official Docker images available
+- **Traditional hosting** - Build and run with Node.js
+- **Reverse proxy** - Nginx or Apache for production
+
+See the [deployment documentation](/installation) for detailed instructions.
+
+## Further Reading
+
+- [Getting Started Guide](/developer/getting-started)
+- [Contributing Guidelines](/developer/contributing)
+- [Official Documentation](https://docs.snailycad.org)

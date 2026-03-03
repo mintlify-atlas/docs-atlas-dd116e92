@@ -1,0 +1,336 @@
+---
+title: Updating SnailyCAD
+description: Learn how to update SnailyCAD to newer versions safely
+---
+
+This guide covers how to update your SnailyCAD installation to newer versions. The update process differs depending on your installation method.
+
+<Note>
+  Always backup your database and files before updating. See the [Backup & Restore](/deployment/backup-restore) guide.
+</Note>
+
+## Version Information
+
+Check your current version in the CAD footer or in `package.json:4`:
+
+```json package.json
+{
+  "name": "snailycad",
+  "version": "1.80.2"
+}
+```
+
+Check the latest version on [GitHub Releases](https://github.com/SnailyCAD/snaily-cadv4/releases).
+
+## Docker Installation Updates
+
+### Standard Update Process
+
+1. **Navigate to installation directory**
+   ```bash
+   cd /path/to/snailycad
+   ```
+
+2. **Stop the running containers**
+   ```bash
+   docker compose -f production.docker-compose.yml down
+   ```
+
+3. **Pull latest changes**
+   ```bash
+   git fetch --all
+   git pull origin main
+   ```
+
+4. **Rebuild the containers**
+   ```bash
+   docker compose -f production.docker-compose.yml build --no-cache
+   ```
+
+5. **Start the containers**
+   ```bash
+   docker compose -f production.docker-compose.yml up -d
+   ```
+
+<Note>
+  Database migrations run automatically on startup via `prisma migrate deploy` in apps/api/package.json:7.
+</Note>
+
+### Update with Environment Changes
+
+If the new version requires environment variable changes:
+
+1. **Check the release notes** for new environment variables
+2. **Update your `.env` file** with new required variables
+3. **Compare with `.env.example`** to ensure all variables are present
+4. **Restart containers** to apply changes
+
+```bash
+# After updating .env
+docker compose -f production.docker-compose.yml up -d
+```
+
+### Troubleshooting Docker Updates
+
+<AccordionGroup>
+  <Accordion title="Build fails with cache issues">
+    Clear Docker build cache:
+    ```bash
+    docker builder prune -a
+    docker compose -f production.docker-compose.yml build --no-cache
+    ```
+  </Accordion>
+
+  <Accordion title="Database migration errors">
+    Check API container logs:
+    ```bash
+    docker logs snaily-cad-api
+    ```
+    
+    Migrations are applied automatically by Prisma. If they fail, check for schema conflicts or manually run:
+    ```bash
+    docker exec -it snaily-cad-api pnpm prisma migrate deploy
+    ```
+  </Accordion>
+
+  <Accordion title="Containers won't start">
+    Check all container logs:
+    ```bash
+    docker compose -f production.docker-compose.yml logs
+    ```
+    
+    Verify environment variables are set correctly:
+    ```bash
+    docker compose -f production.docker-compose.yml config
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Standalone Installation Updates
+
+### Standard Update Process
+
+1. **Navigate to installation directory**
+   ```bash
+   cd /path/to/snailycad
+   ```
+
+2. **Stop the running processes**
+   ```bash
+   # Stop your process manager (PM2, systemd, etc.)
+   pm2 stop snailycad-api snailycad-client
+   # or
+   systemctl stop snailycad-api snailycad-client
+   ```
+
+3. **Pull latest changes**
+   ```bash
+   git stash  # Stash any local changes
+   git pull origin main
+   ```
+
+4. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+5. **Run database migrations**
+   ```bash
+   cd apps/api
+   pnpm prisma migrate deploy
+   cd ../..
+   ```
+
+6. **Build the application**
+   ```bash
+   pnpm run build
+   ```
+
+7. **Start the application**
+   ```bash
+   pm2 start snailycad-api snailycad-client
+   # or
+   systemctl start snailycad-api snailycad-client
+   ```
+
+### Quick Update Script
+
+The package.json:7 includes a `full-start` script that automates most steps:
+
+```bash
+pnpm run full-start
+```
+
+This script:
+- Stashes local changes
+- Pulls latest code
+- Installs dependencies
+- Copies environment files
+- Builds the application
+- Starts both API and client
+
+<Warning>
+  The `full-start` script does NOT run database migrations. Run migrations manually before using this script.
+</Warning>
+
+### Manual Migration Process
+
+If you need more control over migrations:
+
+```bash
+cd apps/api
+pnpm prisma migrate deploy  # Apply pending migrations
+pnpm prisma generate        # Regenerate Prisma client
+cd ../..
+```
+
+## Version-Specific Updates
+
+### Major Version Updates
+
+Major version updates (e.g., 1.x to 2.x) may require additional steps:
+
+1. **Read the migration guide** in the release notes
+2. **Check for breaking changes** in configuration or database schema
+3. **Test in a staging environment** before updating production
+4. **Backup everything** before proceeding
+
+### Minor Version Updates
+
+Minor versions (e.g., 1.80.x to 1.81.x) typically include:
+- New features
+- Bug fixes
+- Non-breaking changes
+- Automatic database migrations
+
+### Patch Updates
+
+Patch versions (e.g., 1.80.1 to 1.80.2) usually include:
+- Bug fixes
+- Security patches
+- No database changes
+- Safe to update without migrations
+
+## Post-Update Verification
+
+### Check Application Health
+
+1. **Verify services are running**
+   ```bash
+   # Docker
+   docker ps
+   
+   # Standalone
+   pm2 status
+   # or
+   systemctl status snailycad-api snailycad-client
+   ```
+
+2. **Check application logs**
+   ```bash
+   # Docker
+   docker logs snaily-cad-api
+   docker logs snaily-cad-client
+   
+   # Standalone
+   pm2 logs
+   ```
+
+3. **Test database connectivity**
+   ```bash
+   # Access the CAD and verify:
+   # - Login works
+   # - Data is intact
+   # - Features work as expected
+   ```
+
+### Verify Database Migrations
+
+```bash
+cd apps/api
+pnpm prisma migrate status
+```
+
+This shows which migrations have been applied. All migrations should show as "Applied".
+
+## Rollback Procedures
+
+### Docker Rollback
+
+1. **Stop current containers**
+   ```bash
+   docker compose -f production.docker-compose.yml down
+   ```
+
+2. **Checkout previous version**
+   ```bash
+   git log --oneline  # Find the commit hash
+   git checkout <commit-hash>
+   ```
+
+3. **Restore database backup**
+   See [Backup & Restore](/deployment/backup-restore) guide.
+
+4. **Rebuild and start**
+   ```bash
+   docker compose -f production.docker-compose.yml build
+   docker compose -f production.docker-compose.yml up -d
+   ```
+
+### Standalone Rollback
+
+1. **Stop services**
+2. **Checkout previous version**: `git checkout <commit-hash>`
+3. **Restore database backup**
+4. **Rebuild**: `pnpm install && pnpm run build`
+5. **Start services**
+
+<Warning>
+  Rolling back after database migrations may cause data loss. Always restore from a backup taken before the update.
+</Warning>
+
+## Update Best Practices
+
+1. **Always backup first** - Database and uploaded files
+2. **Read release notes** - Check for breaking changes and new requirements
+3. **Test in staging** - Validate updates in a non-production environment
+4. **Update during low traffic** - Minimize user disruption
+5. **Monitor after update** - Watch logs for errors or issues
+6. **Keep dependencies updated** - Ensure Node.js and PostgreSQL meet requirements
+
+## Automated Updates
+
+<Warning>
+  Automated updates are NOT recommended for production environments. Always test updates manually first.
+</Warning>
+
+For development or testing environments, you can create an update script:
+
+```bash update.sh
+#!/bin/bash
+set -e
+
+# Backup
+./backup.sh
+
+# Update
+cd /path/to/snailycad
+git pull origin main
+
+# Docker
+docker compose -f production.docker-compose.yml down
+docker compose -f production.docker-compose.yml build --no-cache
+docker compose -f production.docker-compose.yml up -d
+
+# Standalone
+# pnpm install
+# cd apps/api && pnpm prisma migrate deploy && cd ../..
+# pnpm run build
+# pm2 restart all
+```
+
+## Next Steps
+
+- [Backup & Restore](/deployment/backup-restore) - Regular backup procedures
+- [Troubleshooting](/deployment/troubleshooting) - Common issues and solutions
+- [Environment Variables](/configuration/environment-variables) - Configuration reference

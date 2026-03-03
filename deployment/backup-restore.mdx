@@ -1,0 +1,434 @@
+---
+title: Backup & Restore
+description: Backup and restore procedures for SnailyCAD database and files
+---
+
+Regular backups are essential for protecting your SnailyCAD data. This guide covers how to backup and restore your database and uploaded files.
+
+<Warning>
+  Never skip backups before updates or major changes. Data loss without backups is unrecoverable.
+</Warning>
+
+## What to Backup
+
+SnailyCAD stores data in two locations:
+
+1. **PostgreSQL Database** - All CAD data (users, records, calls, etc.)
+2. **File Uploads** - Images and documents in `apps/api/public`
+
+### Database Structure
+
+The database uses Prisma ORM with PostgreSQL (apps/api/prisma/schema.prisma:4-6). Key tables include:
+- `cad` - CAD configuration and settings
+- `User` - User accounts and authentication
+- `Citizen` - Citizen profiles and data
+- Records, calls, vehicles, and other operational data
+
+### File Storage
+
+Uploaded files are stored in the API public directory (production.docker-compose.yml:34):
+- **Docker**: `./apps/api/public` (mounted as volume)
+- **Standalone**: `apps/api/public`
+
+## Database Backup
+
+### Docker Installation
+
+#### Create Database Backup
+
+```bash
+# Create backup directory
+mkdir -p backups
+
+# Backup with timestamp
+docker exec snaily-cad-postgres pg_dump -U postgres snaily-cad-v4 > backups/snailycad-$(date +%Y%m%d-%H%M%S).sql
+```
+
+#### Backup with Compression
+
+```bash
+# Compressed backup (saves disk space)
+docker exec snaily-cad-postgres pg_dump -U postgres snaily-cad-v4 | gzip > backups/snailycad-$(date +%Y%m%d-%H%M%S).sql.gz
+```
+
+#### Custom Format Backup
+
+```bash
+# Custom format (faster restore, supports parallel restore)
+docker exec snaily-cad-postgres pg_dump -U postgres -Fc snaily-cad-v4 > backups/snailycad-$(date +%Y%m%d-%H%M%S).dump
+```
+
+### Standalone Installation
+
+```bash
+# Create backup directory
+mkdir -p backups
+
+# Standard backup
+pg_dump -U postgres -h localhost -p 5432 snaily-cad-v4 > backups/snailycad-$(date +%Y%m%d-%H%M%S).sql
+
+# Compressed backup
+pg_dump -U postgres -h localhost -p 5432 snaily-cad-v4 | gzip > backups/snailycad-$(date +%Y%m%d-%H%M%S).sql.gz
+```
+
+<Note>
+  Replace `postgres`, `localhost`, `5432`, and `snaily-cad-v4` with your actual database credentials from .env.example:6-30.
+</Note>
+
+### Backup PostgreSQL Data Directory
+
+For complete backups including all databases:
+
+```bash
+# Docker - backup the entire data volume (production.docker-compose.yml:15)
+tar -czf backups/postgres-data-$(date +%Y%m%d-%H%M%S).tar.gz ./.data
+
+# Standalone - backup PostgreSQL data directory
+sudo tar -czf backups/postgres-data-$(date +%Y%m%d-%H%M%S).tar.gz /var/lib/postgresql/data
+```
+
+<Warning>
+  Stop the database before backing up the data directory to avoid corruption:
+  ```bash
+  docker compose -f production.docker-compose.yml stop postgres
+  ```
+</Warning>
+
+## File Uploads Backup
+
+### Backup Public Directory
+
+```bash
+# Create backup directory
+mkdir -p backups
+
+# Backup all uploaded files
+tar -czf backups/uploads-$(date +%Y%m%d-%H%M%S).tar.gz apps/api/public
+```
+
+### Backup Specific Directories
+
+```bash
+# Backup only images
+tar -czf backups/images-$(date +%Y%m%d-%H%M%S).tar.gz apps/api/public/images
+
+# Backup only citizen images
+tar -czf backups/citizens-$(date +%Y%m%d-%H%M%S).tar.gz apps/api/public/citizens
+```
+
+### Sync to Remote Storage
+
+```bash
+# Using rsync to remote server
+rsync -avz apps/api/public/ user@backup-server:/backups/snailycad/public/
+
+# Using rclone to cloud storage
+rclone sync apps/api/public/ remote:snailycad-backups/public/
+```
+
+## Complete Backup Script
+
+Create a comprehensive backup script:
+
+```bash backup.sh
+#!/bin/bash
+set -e
+
+# Configuration
+BACKUP_DIR="/backups/snailycad"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+RETENTION_DAYS=30
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+echo "Starting SnailyCAD backup at $TIMESTAMP"
+
+# Backup database (Docker)
+echo "Backing up database..."
+docker exec snaily-cad-postgres pg_dump -U postgres -Fc snaily-cad-v4 > "$BACKUP_DIR/db-$TIMESTAMP.dump"
+
+# Backup uploaded files
+echo "Backing up uploaded files..."
+tar -czf "$BACKUP_DIR/uploads-$TIMESTAMP.tar.gz" apps/api/public
+
+# Backup configuration
+echo "Backing up configuration..."
+cp .env "$BACKUP_DIR/env-$TIMESTAMP"
+cp production.docker-compose.yml "$BACKUP_DIR/docker-compose-$TIMESTAMP.yml"
+
+# Remove old backups
+echo "Removing backups older than $RETENTION_DAYS days..."
+find "$BACKUP_DIR" -type f -mtime +$RETENTION_DAYS -delete
+
+echo "Backup completed successfully!"
+
+# Show backup size
+du -sh "$BACKUP_DIR"
+```
+
+Make it executable:
+```bash
+chmod +x backup.sh
+./backup.sh
+```
+
+## Database Restore
+
+### Docker Installation
+
+#### Restore from SQL Backup
+
+```bash
+# Stop the API to prevent conflicts
+docker compose -f production.docker-compose.yml stop api client
+
+# Drop existing database (WARNING: destroys current data)
+docker exec snaily-cad-postgres psql -U postgres -c "DROP DATABASE IF EXISTS \"snaily-cad-v4\";"
+
+# Create fresh database
+docker exec snaily-cad-postgres psql -U postgres -c "CREATE DATABASE \"snaily-cad-v4\";"
+
+# Restore from backup
+cat backups/snailycad-20240103-120000.sql | docker exec -i snaily-cad-postgres psql -U postgres -d snaily-cad-v4
+
+# Restore from compressed backup
+zcat backups/snailycad-20240103-120000.sql.gz | docker exec -i snaily-cad-postgres psql -U postgres -d snaily-cad-v4
+
+# Start services
+docker compose -f production.docker-compose.yml start api client
+```
+
+#### Restore from Custom Format
+
+```bash
+# Stop services
+docker compose -f production.docker-compose.yml stop api client
+
+# Restore using pg_restore
+docker exec -i snaily-cad-postgres pg_restore -U postgres -d snaily-cad-v4 --clean --if-exists < backups/snailycad-20240103-120000.dump
+
+# Start services
+docker compose -f production.docker-compose.yml start api client
+```
+
+### Standalone Installation
+
+```bash
+# Stop services
+pm2 stop snailycad-api snailycad-client
+# or
+systemctl stop snailycad-api snailycad-client
+
+# Drop and recreate database
+psql -U postgres -c "DROP DATABASE IF EXISTS \"snaily-cad-v4\";"
+psql -U postgres -c "CREATE DATABASE \"snaily-cad-v4\";"
+
+# Restore from backup
+psql -U postgres -d snaily-cad-v4 < backups/snailycad-20240103-120000.sql
+
+# Or from compressed
+zcat backups/snailycad-20240103-120000.sql.gz | psql -U postgres -d snaily-cad-v4
+
+# Start services
+pm2 start snailycad-api snailycad-client
+# or
+systemctl start snailycad-api snailycad-client
+```
+
+### Restore PostgreSQL Data Directory
+
+```bash
+# Stop database
+docker compose -f production.docker-compose.yml stop postgres
+
+# Backup current data (safety measure)
+mv ./.data ./.data.old
+
+# Extract backup
+tar -xzf backups/postgres-data-20240103-120000.tar.gz
+
+# Start database
+docker compose -f production.docker-compose.yml start postgres
+
+# If successful, remove old data
+rm -rf ./.data.old
+```
+
+## File Uploads Restore
+
+### Restore Public Directory
+
+```bash
+# Backup current files (safety measure)
+mv apps/api/public apps/api/public.old
+
+# Extract backup
+tar -xzf backups/uploads-20240103-120000.tar.gz
+
+# Verify permissions
+chown -R 1000:1000 apps/api/public  # Docker user
+# or
+chown -R www-data:www-data apps/api/public  # Standalone
+
+# If successful, remove old files
+rm -rf apps/api/public.old
+```
+
+### Restore from Remote Storage
+
+```bash
+# Using rsync
+rsync -avz user@backup-server:/backups/snailycad/public/ apps/api/public/
+
+# Using rclone
+rclone sync remote:snailycad-backups/public/ apps/api/public/
+```
+
+## Complete Restore Script
+
+```bash restore.sh
+#!/bin/bash
+set -e
+
+# Configuration
+BACKUP_FILE=$1
+
+if [ -z "$BACKUP_FILE" ]; then
+  echo "Usage: ./restore.sh <backup-timestamp>"
+  echo "Example: ./restore.sh 20240103-120000"
+  exit 1
+fi
+
+BACKUP_DIR="/backups/snailycad"
+
+echo "Restoring SnailyCAD from backup $BACKUP_FILE"
+
+# Stop services
+echo "Stopping services..."
+docker compose -f production.docker-compose.yml stop api client
+
+# Restore database
+echo "Restoring database..."
+docker exec -i snaily-cad-postgres pg_restore -U postgres -d snaily-cad-v4 --clean --if-exists < "$BACKUP_DIR/db-$BACKUP_FILE.dump"
+
+# Restore uploads
+echo "Restoring uploaded files..."
+mv apps/api/public apps/api/public.old
+tar -xzf "$BACKUP_DIR/uploads-$BACKUP_FILE.tar.gz"
+
+# Start services
+echo "Starting services..."
+docker compose -f production.docker-compose.yml start api client
+
+echo "Restore completed successfully!"
+echo "Old files backed up to apps/api/public.old"
+```
+
+## Automated Backups
+
+### Cron Job Setup
+
+Schedule automatic backups using cron:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add daily backup at 2 AM
+0 2 * * * /path/to/snailycad/backup.sh >> /var/log/snailycad-backup.log 2>&1
+
+# Add hourly database backup
+0 * * * * docker exec snaily-cad-postgres pg_dump -U postgres -Fc snaily-cad-v4 > /backups/snailycad/hourly-$(date +\%H).dump
+```
+
+### Systemd Timer (Alternative to Cron)
+
+Create `/etc/systemd/system/snailycad-backup.service`:
+
+```ini
+[Unit]
+Description=SnailyCAD Backup
+
+[Service]
+Type=oneshot
+ExecStart=/path/to/snailycad/backup.sh
+User=your-user
+```
+
+Create `/etc/systemd/system/snailycad-backup.timer`:
+
+```ini
+[Unit]
+Description=SnailyCAD Backup Timer
+
+[Timer]
+OnCalendar=daily
+OnCalendar=02:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable the timer:
+```bash
+sudo systemctl enable snailycad-backup.timer
+sudo systemctl start snailycad-backup.timer
+```
+
+## Backup Best Practices
+
+1. **Backup before updates** - Always backup before updating SnailyCAD
+2. **Test restores regularly** - Verify backups work by testing restore procedures
+3. **Store offsite** - Keep backups on a different server or cloud storage
+4. **Encrypt sensitive backups** - Use GPG or similar for encryption
+5. **Monitor backup jobs** - Set up alerts for failed backups
+6. **Document restore procedures** - Keep instructions accessible
+7. **Retain multiple versions** - Keep daily, weekly, and monthly backups
+8. **Automate backups** - Use cron or systemd timers for consistency
+
+## Backup Storage Recommendations
+
+### Retention Strategy
+
+- **Hourly**: Last 24 hours
+- **Daily**: Last 30 days
+- **Weekly**: Last 12 weeks
+- **Monthly**: Last 12 months
+
+### Storage Requirements
+
+Estimate backup sizes:
+- **Database**: Varies by CAD size (typically 100MB - 2GB)
+- **Uploads**: Depends on image quantity (typically 500MB - 5GB)
+- **Total**: Plan for 5-10x daily backup size for retention
+
+### Remote Backup Options
+
+- **Cloud Storage**: AWS S3, Google Cloud Storage, Backblaze B2
+- **Remote Server**: Dedicated backup server via rsync
+- **Network Storage**: NAS or SAN devices
+- **Managed Backup**: Commercial backup services
+
+## Disaster Recovery
+
+### Recovery Time Objective (RTO)
+
+Typical restore times:
+- **Database only**: 5-15 minutes
+- **Database + Files**: 15-30 minutes
+- **Complete system**: 30-60 minutes
+
+### Recovery Point Objective (RPO)
+
+Minimize data loss:
+- **Hourly backups**: Max 1 hour data loss
+- **Daily backups**: Max 24 hours data loss
+- **Continuous replication**: Near-zero data loss
+
+## Next Steps
+
+- [Updating SnailyCAD](/deployment/updating) - Update procedures
+- [Troubleshooting](/deployment/troubleshooting) - Common issues
+- [Environment Variables](/configuration/environment-variables) - Configuration reference

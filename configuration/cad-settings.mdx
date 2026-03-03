@@ -1,0 +1,367 @@
+---
+title: CAD Settings
+description: Configure your CAD settings through the admin panel
+---
+
+CAD Settings allow you to customize various aspects of your SnailyCAD instance. These settings are managed through the admin panel and stored in the database.
+
+<Note>
+  You must have the **ManageCADSettings** permission to access and modify these settings.
+</Note>
+
+## General Settings
+
+Access general CAD settings from **Admin** > **Manage** > **CAD Settings**.
+
+### Basic Information
+
+<ParamField path="name" type="string">
+  The name of your CAD. This appears in the browser title and throughout the application.
+</ParamField>
+
+<ParamField path="areaOfPlay" type="string">
+  The current area of play (AOP). This is displayed to all users and can be updated in real-time.
+  
+  Example: `"Los Santos"`, `"San Andreas"`, `"Liberty City"`
+</ParamField>
+
+<ParamField path="timeZone" type="string">
+  The timezone for your CAD. Affects timestamp displays throughout the application.
+  
+  Example: `"America/New_York"`, `"Europe/London"`, `"UTC"`
+</ParamField>
+
+### Whitelisting
+
+<ParamField path="whitelisted" type="boolean" default={false}>
+  When enabled, only users with the whitelisted role can register and access the CAD.
+</ParamField>
+
+<ParamField path="businessWhitelisted" type="boolean" default={false}>
+  When enabled, business creation requires approval from an administrator.
+</ParamField>
+
+<ParamField path="towWhitelisted" type="boolean" default={false}>
+  When enabled, only whitelisted users can create tow characters.
+</ParamField>
+
+<ParamField path="taxiWhitelisted" type="boolean" default={false}>
+  When enabled, only whitelisted users can create taxi characters.
+</ParamField>
+
+### Registration
+
+<ParamField path="registrationCode" type="string">
+  An optional code required for new user registration. Leave empty to allow open registration.
+  
+  <Warning>
+    The registration code is visible to administrators only.
+  </Warning>
+</ParamField>
+
+### Branding
+
+<ParamField path="logoId" type="string">
+  The ID of the uploaded logo image. Upload images through the CAD Settings Images section.
+</ParamField>
+
+<ParamField path="cadOGDescription" type="string">
+  The Open Graph description for your CAD. This appears when sharing links on social media.
+</ParamField>
+
+<ParamField path="authScreenBgImageId" type="string">
+  The ID of the background image for authentication screens (login/register).
+</ParamField>
+
+<ParamField path="authScreenHeaderImageId" type="string">
+  The ID of the header image for authentication screens.
+</ParamField>
+
+## Miscellaneous Settings
+
+Additional configuration options for fine-tuning your CAD's behavior.
+
+### Roleplay Settings
+
+<ParamField path="roleplayEnabled" type="boolean" default={true}>
+  Controls whether roleplay is currently active. When disabled, a notification is shown to all users.
+</ParamField>
+
+### Citizen Settings
+
+<ParamField path="maxCitizensPerUser" type="number" default={null}>
+  Maximum number of citizens each user can create. Set to `null` for unlimited.
+</ParamField>
+
+<ParamField path="maxBusinessesPerCitizen" type="number" default={null}>
+  Maximum number of businesses each citizen can own. Set to `null` for unlimited.
+</ParamField>
+
+### Unit Settings
+
+<ParamField path="maxOfficersPerUser" type="number" default={null}>
+  Maximum number of officers each user can create. Set to `null` for unlimited.
+</ParamField>
+
+<ParamField path="maxDivisionsPerOfficer" type="number" default={null}>
+  Maximum number of divisions an officer can be assigned to. Set to `null` for unlimited.
+</ParamField>
+
+<ParamField path="maxDepartmentsEachPerUser" type="number" default={null}>
+  Maximum number of departments each officer can be part of. Set to `null` for unlimited.
+</ParamField>
+
+### Measurement Units
+
+<ParamField path="heightPrefix" type="string" default="">
+  The prefix/unit for height measurements.
+  
+  Examples: `"cm"`, `"ft/in"`, `"m"`
+</ParamField>
+
+<ParamField path="weightPrefix" type="string" default="">
+  The prefix/unit for weight measurements.
+  
+  Examples: `"kg"`, `"lbs"`, `"st"`
+</ParamField>
+
+### Templates
+
+<ParamField path="callsignTemplate" type="string">
+  Template for generating unit callsigns.
+  
+  Available variables:
+  - `{department}` - Department identifier
+  - `{division}` - Division identifier
+  - `{officerNumber}` - Officer number
+  
+  Example: `"{department}-{division}-{officerNumber}"`
+</ParamField>
+
+<ParamField path="pairedUnitTemplate" type="string">
+  Template for generating paired unit callsigns.
+  
+  Example: `"{callsign1}+{callsign2}"`
+</ParamField>
+
+<ParamField path="caseNumberTemplate" type="string">
+  Template for generating case numbers.
+  
+  Example: `"#{year}-{caseNumber}"`
+</ParamField>
+
+### License Templates
+
+Each license type can have customizable templates and settings:
+
+<ParamField path="driversLicenseTemplate" type="string">
+  Template for driver's license numbers.
+</ParamField>
+
+<ParamField path="driversLicenseNumberLength" type="number" default={8}>
+  Length of generated driver's license numbers.
+</ParamField>
+
+<ParamField path="driversLicenseMaxPoints" type="number" default={12}>
+  Maximum points before driver's license suspension.
+</ParamField>
+
+<ParamField path="pilotLicenseTemplate" type="string">
+  Template for pilot license numbers.
+</ParamField>
+
+<ParamField path="pilotLicenseNumberLength" type="number" default={8}>
+  Length of generated pilot license numbers.
+</ParamField>
+
+<ParamField path="pilotLicenseMaxPoints" type="number" default={12}>
+  Maximum points before pilot license suspension.
+</ParamField>
+
+<ParamField path="weaponLicenseTemplate" type="string">
+  Template for weapon license numbers.
+</ParamField>
+
+<ParamField path="weaponLicenseNumberLength" type="number" default={8}>
+  Length of generated weapon license numbers.
+</ParamField>
+
+<ParamField path="weaponLicenseMaxPoints" type="number" default={12}>
+  Maximum points before weapon license suspension.
+</ParamField>
+
+<ParamField path="waterLicenseTemplate" type="string">
+  Template for water license numbers.
+</ParamField>
+
+<ParamField path="waterLicenseNumberLength" type="number" default={8}>
+  Length of generated water license numbers.
+</ParamField>
+
+<ParamField path="waterLicenseMaxPoints" type="number" default={12}>
+  Maximum points before water license suspension.
+</ParamField>
+
+<ParamField path="fishingLicenseTemplate" type="string">
+  Template for fishing license numbers.
+</ParamField>
+
+<ParamField path="fishingLicenseNumberLength" type="number" default={8}>
+  Length of generated fishing license numbers.
+</ParamField>
+
+<ParamField path="fishingLicenseMaxPoints" type="number" default={12}>
+  Maximum points before fishing license suspension.
+</ParamField>
+
+<ParamField path="huntingLicenseTemplate" type="string">
+  Template for hunting license numbers.
+</ParamField>
+
+<ParamField path="huntingLicenseNumberLength" type="number" default={8}>
+  Length of generated hunting license numbers.
+</ParamField>
+
+<ParamField path="huntingLicenseMaxPoints" type="number" default={12}>
+  Maximum points before hunting license suspension.
+</ParamField>
+
+### Vehicle Settings
+
+<ParamField path="maxPlateLength" type="number" default={8}>
+  Maximum length for vehicle license plates.
+</ParamField>
+
+### Call and Incident Settings
+
+<ParamField path="maxAssignmentsToCalls" type="number" default={null}>
+  Maximum number of units that can be assigned to a single call. Set to `null` for unlimited.
+</ParamField>
+
+<ParamField path="maxAssignmentsToIncidents" type="number" default={null}>
+  Maximum number of units that can be assigned to a single incident. Set to `null` for unlimited.
+</ParamField>
+
+### Inactivity Timeouts
+
+Automatic timeout settings for various features (in minutes):
+
+<ParamField path="call911InactivityTimeout" type="number" default={null}>
+  Minutes of inactivity before a 911 call is automatically ended. Set to `null` to disable.
+</ParamField>
+
+<ParamField path="incidentInactivityTimeout" type="number" default={null}>
+  Minutes of inactivity before an incident is automatically ended. Set to `null` to disable.
+</ParamField>
+
+<ParamField path="unitInactivityTimeout" type="number" default={null}>
+  Minutes of inactivity before a unit is automatically set to off-duty. Set to `null` to disable.
+</ParamField>
+
+<ParamField path="activeDispatchersInactivityTimeout" type="number" default={null}>
+  Minutes of inactivity before a dispatcher is automatically marked as inactive. Set to `null` to disable.
+</ParamField>
+
+<ParamField path="boloInactivityTimeout" type="number" default={null}>
+  Minutes before a BOLO automatically expires. Set to `null` to disable.
+</ParamField>
+
+<ParamField path="activeWarrantsInactivityTimeout" type="number" default={null}>
+  Minutes before an active warrant automatically expires. Set to `null` to disable.
+</ParamField>
+
+### Jail Time Scaling
+
+<ParamField path="jailTimeScale" type="enum" default={null}>
+  Scale for jail time calculations.
+  
+  Options:
+  - `null` - No scaling
+  - `SECONDS` - Time in seconds
+  - `MINUTES` - Time in minutes
+  - `HOURS` - Time in hours
+</ParamField>
+
+### Signal 100 Settings
+
+<ParamField path="signal100RepeatAmount" type="number" default={3}>
+  Number of times to repeat Signal 100 alerts.
+</ParamField>
+
+<ParamField path="signal100RepeatIntervalMs" type="number" default={1000}>
+  Interval between Signal 100 alert repeats in milliseconds.
+</ParamField>
+
+## Features
+
+Toggle various features on or off for your CAD instance.
+
+Access from **Admin** > **Manage** > **CAD Settings** > **Features**.
+
+Features can be enabled or disabled individually. Some features may have additional configuration options.
+
+## API Token
+
+Generate and manage API tokens for programmatic access to your CAD.
+
+<ParamField path="enabled" type="boolean" default={false}>
+  Enable or disable the global API token.
+</ParamField>
+
+When enabled, an API token is generated with the prefix `sng_` followed by 56 random characters.
+
+<Warning>
+  Keep your API token secure! Anyone with this token has full API access to your CAD.
+</Warning>
+
+### Managing API Tokens
+
+- **Enable**: Creates a new API token
+- **Disable**: Removes the current API token
+- **Regenerate**: Creates a new token, invalidating the previous one
+
+## Default Permissions
+
+Set default permissions for new users.
+
+<ParamField path="defaultPermissions" type="array">
+  Array of permission names that are automatically granted to new users.
+  
+  See the [Permissions documentation](/configuration/permissions) for available permissions.
+</ParamField>
+
+## Blacklisted Words
+
+Manage words that are not allowed in citizen names, vehicle plates, and other user inputs.
+
+<ParamField path="word" type="string">
+  A word to blacklist. All comparisons are case-insensitive.
+</ParamField>
+
+Blacklisted words can be:
+- Added individually through the admin panel
+- Imported in bulk via CSV/JSON file
+- Deleted individually
+
+## Live Map Settings
+
+Configure live map integration for real-time unit tracking.
+
+See the [Live Map Integration guide](/integrations/live-map) for detailed setup instructions.
+
+<ParamField path="liveMapURLs" type="array">
+  Array of live map URLs that can display unit positions.
+</ParamField>
+
+## Audit Logs
+
+All changes to CAD settings are automatically logged in the audit log, including:
+
+- CAD settings updates
+- Feature toggles
+- Miscellaneous settings changes
+- Default permissions changes
+- API token operations
+- Discord role configuration
+
+View audit logs from **Admin** > **Manage** > **CAD Settings** > **Audit Logs**.

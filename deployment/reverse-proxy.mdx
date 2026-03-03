@@ -1,0 +1,533 @@
+---
+title: Reverse Proxy Setup
+description: Configure nginx or Caddy as a reverse proxy for SnailyCAD with SSL
+---
+
+This guide covers setting up a reverse proxy to serve SnailyCAD with SSL/TLS encryption and custom domains.
+
+## Why Use a Reverse Proxy?
+
+A reverse proxy provides several benefits:
+
+- **SSL/TLS Encryption**: Secure your CAD with HTTPS
+- **Custom Domains**: Use friendly domain names instead of IP:port
+- **Load Balancing**: Distribute traffic across multiple instances
+- **Caching**: Improve performance with static asset caching
+- **Security**: Hide your server's real IP and ports
+
+## Prerequisites
+
+- SnailyCAD installed and running (Docker or Standalone)
+- A domain name pointing to your server
+- Port 80 and 443 open on your firewall
+- Root or sudo access to your server
+
+## nginx Setup
+
+### Installation
+
+<Steps>
+  <Step title="Install nginx">
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt update
+    sudo apt install nginx
+    ```
+
+    **RHEL/CentOS/Fedora:**
+    ```bash
+    sudo yum install nginx
+    ```
+
+    **Start and enable nginx:**
+    ```bash
+    sudo systemctl start nginx
+    sudo systemctl enable nginx
+    ```
+  </Step>
+
+  <Step title="Install Certbot for SSL">
+    Install Certbot to obtain free SSL certificates from Let's Encrypt:
+
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt install certbot python3-certbot-nginx
+    ```
+
+    **RHEL/CentOS/Fedora:**
+    ```bash
+    sudo yum install certbot python3-certbot-nginx
+    ```
+  </Step>
+
+  <Step title="Create nginx configuration">
+    Create a new configuration file for SnailyCAD:
+
+    ```bash
+    sudo nano /etc/nginx/sites-available/snailycad
+    ```
+
+    Add the following configuration:
+
+    ```nginx
+    # Redirect HTTP to HTTPS
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name cad.yourdomain.com;
+        
+        return 301 https://$server_name$request_uri;
+    }
+
+    # Client (Frontend)
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name cad.yourdomain.com;
+
+        # SSL will be configured by Certbot
+        
+        # Increase body size for file uploads
+        client_max_body_size 50M;
+        
+        # Proxy settings
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        
+        location / {
+            proxy_pass http://localhost:3000;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+
+    # API (Backend)
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name api.yourdomain.com;
+
+        # SSL will be configured by Certbot
+        
+        # Increase body size for file uploads
+        client_max_body_size 50M;
+        
+        # Proxy settings
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-for $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        
+        location / {
+            proxy_pass http://localhost:8080;
+        }
+    }
+    ```
+
+    <Note>
+      Replace `cad.yourdomain.com` and `api.yourdomain.com` with your actual domain names.
+    </Note>
+  </Step>
+
+  <Step title="Enable the configuration">
+    Create a symbolic link to enable the site:
+
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/snailycad /etc/nginx/sites-enabled/
+    ```
+
+    Test the configuration:
+
+    ```bash
+    sudo nginx -t
+    ```
+
+    If successful, reload nginx:
+
+    ```bash
+    sudo systemctl reload nginx
+    ```
+  </Step>
+
+  <Step title="Obtain SSL certificates">
+    Use Certbot to obtain and install SSL certificates:
+
+    ```bash
+    sudo certbot --nginx -d cad.yourdomain.com -d api.yourdomain.com
+    ```
+
+    Follow the prompts to:
+    - Enter your email address
+    - Agree to the terms of service
+    - Choose whether to redirect HTTP to HTTPS (recommended)
+
+    Certbot will automatically:
+    - Obtain SSL certificates
+    - Update your nginx configuration
+    - Set up automatic certificate renewal
+  </Step>
+
+  <Step title="Update SnailyCAD environment">
+    Update your `.env` file to use the new domains:
+
+    ```bash
+    CORS_ORIGIN_URL="https://cad.yourdomain.com"
+    NEXT_PUBLIC_CLIENT_URL="https://cad.yourdomain.com"
+    NEXT_PUBLIC_PROD_ORIGIN="https://api.yourdomain.com/v1"
+    DOMAIN="yourdomain.com"
+    SECURE_COOKIES_FOR_IFRAME="true"
+    ```
+
+    Restart SnailyCAD:
+
+    **Docker:**
+    ```bash
+    docker compose -f production.docker-compose.yml restart
+    ```
+
+    **Standalone (PM2):**
+    ```bash
+    pm2 restart snailycad
+    ```
+
+    **Standalone (systemd):**
+    ```bash
+    sudo systemctl restart snailycad
+    ```
+  </Step>
+</Steps>
+
+### nginx Configuration Explained
+
+Key directives in the nginx configuration:
+
+- `client_max_body_size 50M`: Allows file uploads up to 50MB
+- `proxy_set_header Host $host`: Preserves the original host header
+- `proxy_set_header X-Real-IP $remote_addr`: Passes the client's real IP
+- `proxy_set_header X-Forwarded-Proto $scheme`: Indicates HTTPS was used
+- `proxy_http_version 1.1`: Required for WebSocket support
+- `proxy_set_header Upgrade $http_upgrade`: Enables WebSocket upgrades
+
+## Caddy Setup
+
+Caddy is a modern web server with automatic HTTPS.
+
+### Installation
+
+<Steps>
+  <Step title="Install Caddy">
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+    sudo apt update
+    sudo apt install caddy
+    ```
+
+    **RHEL/CentOS/Fedora:**
+    ```bash
+    dnf install 'dnf-command(copr)'
+    dnf copr enable @caddy/caddy
+    dnf install caddy
+    ```
+  </Step>
+
+  <Step title="Create Caddyfile">
+    Edit the Caddy configuration:
+
+    ```bash
+    sudo nano /etc/caddy/Caddyfile
+    ```
+
+    Add the following configuration:
+
+    ```caddy
+    # Client (Frontend)
+    cad.yourdomain.com {
+        reverse_proxy localhost:3000
+        
+        # Enable file uploads
+        request_body {
+            max_size 50MB
+        }
+        
+        # Headers
+        header {
+            X-Frame-Options "SAMEORIGIN"
+            X-Content-Type-Options "nosniff"
+            X-XSS-Protection "1; mode=block"
+        }
+    }
+
+    # API (Backend)
+    api.yourdomain.com {
+        reverse_proxy localhost:8080
+        
+        # Enable file uploads
+        request_body {
+            max_size 50MB
+        }
+        
+        # Headers
+        header {
+            X-Frame-Options "SAMEORIGIN"
+            X-Content-Type-Options "nosniff"
+        }
+    }
+    ```
+
+    <Note>
+      Replace `cad.yourdomain.com` and `api.yourdomain.com` with your actual domains.
+    </Note>
+  </Step>
+
+  <Step title="Reload Caddy">
+    Reload Caddy to apply the configuration:
+
+    ```bash
+    sudo systemctl reload caddy
+    ```
+
+    Caddy will automatically:
+    - Obtain SSL certificates from Let's Encrypt
+    - Configure HTTPS
+    - Set up HTTP to HTTPS redirects
+    - Handle certificate renewals
+  </Step>
+
+  <Step title="Update SnailyCAD environment">
+    Update your `.env` file:
+
+    ```bash
+    CORS_ORIGIN_URL="https://cad.yourdomain.com"
+    NEXT_PUBLIC_CLIENT_URL="https://cad.yourdomain.com"
+    NEXT_PUBLIC_PROD_ORIGIN="https://api.yourdomain.com/v1"
+    DOMAIN="yourdomain.com"
+    SECURE_COOKIES_FOR_IFRAME="true"
+    ```
+
+    Restart SnailyCAD:
+
+    **Docker:**
+    ```bash
+    docker compose -f production.docker-compose.yml restart
+    ```
+
+    **Standalone:**
+    ```bash
+    pm2 restart snailycad
+    # or
+    sudo systemctl restart snailycad
+    ```
+  </Step>
+</Steps>
+
+### Caddy Advantages
+
+- **Automatic HTTPS**: No need to manually configure SSL certificates
+- **Simple Configuration**: Minimal syntax compared to nginx
+- **Modern Defaults**: HTTP/2, OCSP stapling enabled by default
+- **Zero Downtime Reloads**: Configuration changes don't interrupt traffic
+
+## Single Domain Setup
+
+If you prefer to use a single domain with paths instead of subdomains:
+
+### nginx (Single Domain)
+
+```nginx
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name cad.yourdomain.com;
+
+    # SSL configuration
+    ssl_certificate /etc/letsencrypt/live/cad.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cad.yourdomain.com/privkey.pem;
+    
+    client_max_body_size 50M;
+    
+    # API requests
+    location /v1 {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Client requests
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+### Caddy (Single Domain)
+
+```caddy
+cad.yourdomain.com {
+    # API requests
+    handle /v1/* {
+        reverse_proxy localhost:8080
+    }
+    
+    # Client requests
+    handle {
+        reverse_proxy localhost:3000
+    }
+    
+    request_body {
+        max_size 50MB
+    }
+}
+```
+
+Update your `.env`:
+
+```bash
+CORS_ORIGIN_URL="https://cad.yourdomain.com"
+NEXT_PUBLIC_CLIENT_URL="https://cad.yourdomain.com"
+NEXT_PUBLIC_PROD_ORIGIN="https://cad.yourdomain.com/v1"
+DOMAIN="yourdomain.com"
+SECURE_COOKIES_FOR_IFRAME="true"
+```
+
+## Troubleshooting
+
+### 502 Bad Gateway
+
+Verify SnailyCAD is running:
+
+```bash
+# Docker
+docker ps
+
+# Standalone
+pm2 status
+# or
+sudo systemctl status snailycad
+```
+
+Check if ports are accessible:
+
+```bash
+curl http://localhost:3000
+curl http://localhost:8080/v1
+```
+
+### SSL Certificate Errors
+
+Check certificate validity:
+
+```bash
+sudo certbot certificates
+```
+
+Manually renew certificates:
+
+```bash
+sudo certbot renew
+```
+
+### WebSocket Connection Failed
+
+Ensure these headers are set in your nginx configuration:
+
+```nginx
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+```
+
+### CORS Errors
+
+Verify your `.env` URLs match exactly:
+
+- `CORS_ORIGIN_URL` should match `NEXT_PUBLIC_CLIENT_URL`
+- Include the protocol (`https://`)
+- Don't include trailing slashes
+
+## Security Best Practices
+
+### nginx Security Headers
+
+Add these headers to your nginx configuration:
+
+```nginx
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "no-referrer-when-downgrade" always;
+add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+```
+
+### Firewall Configuration
+
+Block direct access to SnailyCAD ports:
+
+```bash
+# Allow HTTP and HTTPS
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Block direct access to SnailyCAD
+sudo ufw deny 3000/tcp
+sudo ufw deny 8080/tcp
+
+# Enable firewall
+sudo ufw enable
+```
+
+### Rate Limiting
+
+Add rate limiting to prevent abuse:
+
+**nginx:**
+```nginx
+http {
+    limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+    
+    server {
+        location / {
+            limit_req zone=general burst=20 nodelay;
+        }
+    }
+}
+```
+
+**Caddy:**
+```caddy
+cad.yourdomain.com {
+    rate_limit {
+        zone general {
+            key {remote_host}
+            events 10
+            window 1s
+        }
+    }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Docker Installation" icon="docker" href="/deployment/docker">
+    Set up SnailyCAD with Docker
+  </Card>
+  <Card title="Standalone Installation" icon="server" href="/deployment/standalone">
+    Install SnailyCAD without Docker
+  </Card>
+</CardGroup>

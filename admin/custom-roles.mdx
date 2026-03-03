@@ -1,0 +1,315 @@
+---
+title: Custom Roles
+description: Create and manage custom permission roles for users
+---
+
+## Overview
+
+Custom Roles provide a role-based permission system that allows you to create reusable permission sets. Instead of assigning permissions individually to each user, you can create roles (e.g., "Moderator", "Senior Admin") and assign them to multiple users.
+
+## Accessing Custom Roles
+
+Navigate to **Admin** > **Manage** > **Custom Roles** to access the custom roles management interface.
+
+### Required Permissions
+
+- `ViewCustomRoles` - View custom roles
+- `ManageCustomRoles` - Create, edit, and delete custom roles
+
+## Understanding Custom Roles
+
+Custom roles combine:
+- **Name** - Role identifier (e.g., "Moderator", "Supervisor")
+- **Permissions** - Set of granted permissions
+- **Discord Role** - Optional Discord role sync
+- **Icon** - Optional role badge image
+
+When a role is assigned to a user, they automatically receive all permissions associated with that role.
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:35-179
+```
+
+## Creating Custom Roles
+
+1. Click **Create Custom Role**
+2. Fill in the role details:
+   - **Name** - Unique role name (e.g., "Community Moderator")
+   - **Permissions** - Select all permissions this role should have
+   - **Discord Role** - (Optional) Link to a Discord role for auto-assignment
+   - **Icon** - (Optional) Upload a role badge image
+3. Click **Create**
+
+The role is now available for assignment to users.
+
+### Example: Creating a Moderator Role
+
+```
+Name: Moderator
+Permissions:
+  - ViewUsers
+  - ManageUsers
+  - BanUsers
+  - ViewAuditLogs
+  - ManageCADSettings
+Discord Role: Moderator (from your Discord server)
+Icon: moderator-badge.png
+```
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:63-99
+```
+
+## Editing Custom Roles
+
+1. Click **Edit** next to the custom role
+2. Modify the role details:
+   - Name
+   - Permissions (add or remove)
+   - Discord role link
+   - Icon image
+3. Click **Save**
+
+<Note>
+  Changes to role permissions immediately affect all users with that role.
+</Note>
+
+## Deleting Custom Roles
+
+1. Click **Delete** next to the custom role
+2. Confirm deletion
+
+<Warning>
+  When a role is deleted, users with that role lose the associated permissions. Ensure users have necessary permissions through other roles or individual assignments.
+</Warning>
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:142-170
+```
+
+## Permission Categories
+
+Permissions are organized into categories:
+
+### Administrative Permissions
+- `ViewUsers`, `ManageUsers`, `BanUsers`, `DeleteUsers` - User management
+- `ViewCustomFields`, `ManageCustomFields` - Custom field management
+- `ViewCustomRoles`, `ManageCustomRoles` - Role management
+- `ManageCadSettings` - CAD configuration
+- `ViewAuditLogs` - Audit log access
+- `ImportCitizens`, `ImportVehicles`, `ImportWeapons` - Bulk import
+- `DeleteCitizens`, `DeleteBusinesses` - Citizen/business deletion
+
+### Law Enforcement Permissions
+- `Leo` - Access LEO features
+- `ViewIncidents`, `ManageIncidents` - Incident management
+- `ManageRecords` - Arrest/citation records
+- `ManageJail` - Jail management
+- `ViewImpoundLot`, `ManageImpoundLot` - Vehicle impound
+- `ManagePenalCodes` - Law management
+- `ManageUnitsCallsigns` - Unit callsign management
+- `ManageUnitCallsigns` - Individual unit callsigns
+- `ManageNameChangeRequests` - Name change approvals
+- `ManageExpungementRequests` - Record expungement
+- `ManageWarrants` - Warrant management
+- `PurgeLeoIncidents` - Incident purging
+
+### Dispatch Permissions
+- `Dispatch` - Access dispatch panel
+- `ManageActiveUnits` - Control active units
+- `ManageTowCalls` - Tow call management
+- `ManageTaxiCalls` - Taxi call management
+- `Manage911Calls` - 911 call management
+- `Purge911Calls` - Call purging
+- `ViewTowLogs` - Tow call logs
+- `ViewTaxiLogs` - Taxi call logs
+
+### EMS/Fire Department Permissions
+- `EmsFd` - Access EMS/FD features
+- `ViewDeadCitizens` - View deceased citizens
+- `DeclareCitizenDead` - Declare citizens deceased
+- `PurgeEmsFdIncidents` - Incident purging
+
+### Other Permissions
+- `ManageDMV` - DMV management
+- `ManageLicenseExams` - License exam system
+- `ManageBureauOfFirearms` - Firearm permits
+- `ManageCourthousePosts` - Courthouse announcements
+- `UsePersonalApiToken` - API token access
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:125-127
+```
+
+## Discord Role Integration
+
+Link custom roles to Discord roles for automatic permission assignment:
+
+1. Configure Discord integration in CAD Settings
+2. When creating/editing a custom role, select a Discord role
+3. When users authenticate with Discord, they automatically receive the linked custom role
+
+**Benefits:**
+- Automatic role assignment
+- Sync permissions across platforms
+- No manual role management
+
+<Note>
+  Discord integration requires proper configuration. See [Discord Integration](/integrations/discord) for setup instructions.
+</Note>
+
+## Role Icons
+
+Add visual badges to roles:
+
+1. When creating/editing a role, upload an image
+2. Supported formats: PNG, JPG, GIF, WebP
+3. Recommended size: 64x64 to 128x128 pixels
+
+Icons appear:
+- Next to usernames (if configured)
+- In role management interfaces
+- In user profiles
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:172-217
+```
+
+## Assigning Roles to Users
+
+Roles are assigned from the user management page:
+
+1. Go to **Admin** > **Manage** > **Users**
+2. Click **Manage** next to a user
+3. Click **Manage Roles**
+4. Select/deselect roles
+5. Click **Save**
+
+Users can have multiple roles. Permissions are cumulative (union of all role permissions).
+
+See [User Management](/admin/user-management#managing-roles) for details.
+
+## Role Priority and Conflicts
+
+**Permission Stacking:**
+- Users can have multiple roles
+- All permissions from all roles are combined
+- Individual user permissions also stack
+- No permission conflicts (more permissions always win)
+
+**Example:**
+```
+User: John Doe
+Roles:
+  - Moderator (ViewUsers, BanUsers)
+  - Dispatcher (Dispatch, Manage911Calls)
+  - Individual: ManageCadSettings
+  
+Total Permissions:
+  ViewUsers, BanUsers, Dispatch, Manage911Calls, ManageCadSettings
+```
+
+## Viewing Role Details
+
+The custom roles table displays:
+- **Name** - Role name
+- **Permissions** - List of granted permissions (expandable)
+- **Discord Role** - Linked Discord role name (if any)
+- **Created At** - When the role was created
+- **Actions** - Edit and delete buttons
+
+Permissions are shown as a comma-separated list. Long lists are truncated with an expand option.
+
+## Search and Filtering
+
+The custom roles list supports:
+- **Search** - Filter by role name or Discord role name
+- **Pagination** - 35 roles per page
+- **Sorting** - Sort by creation date (newest first)
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/custom-roles.tsx:39-60
+```
+
+## Common Role Templates
+
+### Community Moderator
+Permissions: `ViewUsers`, `BanUsers`, `ViewAuditLogs`, `Manage911Calls`, `ManageTowCalls`
+
+Use for: Community helpers who handle user issues and dispatch tasks
+
+### Senior Administrator
+Permissions: All admin permissions except `DeleteUsers`, `ManageCustomRoles`
+
+Use for: Trusted admins with broad access but not full ownership
+
+### LEO Supervisor
+Permissions: `Leo`, `ManageRecords`, `ManageIncidents`, `ViewImpoundLot`, `ManageExpungementRequests`, `ManageWarrants`
+
+Use for: Law enforcement supervisors with record management authority
+
+### Dispatcher
+Permissions: `Dispatch`, `Manage911Calls`, `ManageTowCalls`, `ManageTaxiCalls`, `ManageActiveUnits`, `ViewTowLogs`
+
+Use for: Dedicated dispatch users
+
+### Read-Only Admin
+Permissions: `ViewUsers`, `ViewAuditLogs`, `ViewCustomRoles`, `ViewCustomFields`, `ViewIncidents`, `ViewImpoundLot`
+
+Use for: Oversight or auditing without modification rights
+
+## Audit Logging
+
+All custom role operations are logged:
+- `CustomRoleCreate` - Role created
+- `CustomRoleUpdate` - Role modified (shows permission changes)
+- `CustomRoleDelete` - Role deleted
+
+See [Audit Logs](/admin/audit-logs) to review these actions.
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-roles-controller.ts:92-96
+```
+
+## Best Practices
+
+1. **Descriptive Names** - Use clear role names that indicate purpose (e.g., "LEO Supervisor" instead of "Role 1")
+2. **Least Privilege** - Grant only the permissions needed for the role
+3. **Role Templates** - Create standard roles for common positions
+4. **Regular Audits** - Review role permissions periodically
+5. **Discord Sync** - Use Discord integration for automatic role management
+6. **Documentation** - Document what each role is for and who should have it
+7. **Test Roles** - Test new roles with a test account before assigning to real users
+
+## Troubleshooting
+
+### Role Not Appearing for User
+
+- **Assignment**: Verify role is assigned to the user (User Management page)
+- **Discord Sync**: If using Discord integration, ensure user has linked their Discord account
+- **Cache**: Clear browser cache and re-login
+
+### Permissions Not Working
+
+- **Role Assignment**: Confirm role is assigned to the user
+- **Permission List**: Verify the permission exists in the role
+- **Owner Rank**: Owner rank overrides all roles
+- **Individual Permissions**: Check if individual user permissions conflict
+
+### Cannot Delete Role
+
+- **Permissions**: Verify you have `ManageCustomRoles` permission
+- **In Use**: Roles can be deleted even if assigned to users
+
+### Discord Role Not Syncing
+
+- **Integration**: Ensure Discord integration is configured
+- **Bot Permissions**: Verify the Discord bot has role read permissions
+- **Role Name**: Discord role names are case-sensitive
+
+## Related Documentation
+
+- [User Management](/admin/user-management) - Assign roles to users
+- [Permissions System](/configuration/permissions) - Understand all available permissions
+- [Discord Integration](/integrations/discord) - Configure Discord role sync
+- [Audit Logs](/admin/audit-logs) - Review role changes

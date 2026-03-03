@@ -1,0 +1,438 @@
+---
+title: EMS/Fire Department
+description: EMS-FD deputy management and medical services
+---
+
+## Overview
+
+The EMS/Fire Department API provides endpoints for managing EMS-FD deputies, medical records, doctor visits, and declaring citizens deceased.
+
+<Info>
+Most EMS-FD endpoints require the `EmsFd` permission and an active deputy on duty.
+</Info>
+
+---
+
+## Get Deputies
+
+<CodeGroup>
+```bash GET /api/ems-fd
+curl -X GET "https://your-cad.com/api/ems-fd?query=" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all EMS-FD deputies for the authenticated user.
+
+### Query Parameters
+
+<ParamField query="query" type="string">
+  Search query for filtering deputies
+</ParamField>
+
+### Response
+
+<ResponseField name="deputies" type="array">
+  Array of deputy objects with qualifications and unit properties
+</ResponseField>
+
+---
+
+## Get Active Deputy
+
+<CodeGroup>
+```bash GET /api/ems-fd/active-deputy
+curl -X GET https://your-cad.com/api/ems-fd/active-deputy \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get the currently active deputy for the authenticated user.
+
+### Response
+
+Returns the active deputy object with status, department, division, and citizen information.
+
+---
+
+## Get Active Deputies
+
+<CodeGroup>
+```bash GET /api/ems-fd/active-deputies
+curl -X GET "https://your-cad.com/api/ems-fd/active-deputies?skip=0&includeAll=false" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all currently active EMS-FD deputies and combined units.
+
+### Query Parameters
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all deputies (ignore pagination)
+</ParamField>
+
+<ParamField query="skip" type="number" default="0">
+  Number of records to skip
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query
+</ParamField>
+
+### Response
+
+Returns an array of active deputy and combined EMS-FD unit objects.
+
+---
+
+## Create Deputy
+
+<CodeGroup>
+```bash POST /api/ems-fd
+curl -X POST https://your-cad.com/api/ems-fd \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "department": "department-id",
+    "division": "division-id",
+    "callsign": "E-101",
+    "badgeNumber": "54321"
+  }'
+```
+</CodeGroup>
+
+Create a new EMS-FD deputy.
+
+### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID to link to deputy
+</ParamField>
+
+<ParamField body="department" type="string" required>
+  Department ID
+</ParamField>
+
+<ParamField body="division" type="string">
+  Division ID
+</ParamField>
+
+<ParamField body="callsign" type="string" required>
+  Deputy callsign (e.g., "E-101")
+</ParamField>
+
+<ParamField body="badgeNumber" type="string" required>
+  Badge number
+</ParamField>
+
+<ParamField body="rank" type="string">
+  Rank ID
+</ParamField>
+
+---
+
+## Update Deputy
+
+<CodeGroup>
+```bash PUT /api/ems-fd/:id
+curl -X PUT https://your-cad.com/api/ems-fd/{deputyId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "callsign": "E-102",
+    "badgeNumber": "54322"
+  }'
+```
+</CodeGroup>
+
+Update an existing deputy's information.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Deputy ID
+</ParamField>
+
+---
+
+## Delete Deputy
+
+<CodeGroup>
+```bash DELETE /api/ems-fd/:id
+curl -X DELETE https://your-cad.com/api/ems-fd/{deputyId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete a deputy.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Deputy ID
+</ParamField>
+
+---
+
+## Toggle Panic Button
+
+<CodeGroup>
+```bash POST /api/ems-fd/panic-button
+curl -X POST https://your-cad.com/api/ems-fd/panic-button \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deputyId": "deputy-id",
+    "isEnabled": true
+  }'
+```
+</CodeGroup>
+
+Enable or disable panic button for a deputy.
+
+### Request Body
+
+<ParamField body="deputyId" type="string" required>
+  Deputy ID
+</ParamField>
+
+<ParamField body="isEnabled" type="boolean" required>
+  Enable or disable panic mode
+</ParamField>
+
+---
+
+## Medical Records
+
+### Create Medical Record
+
+<CodeGroup>
+```bash POST /api/ems-fd/medical-records
+curl -X POST https://your-cad.com/api/ems-fd/medical-records \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "type": "MEDICATION",
+    "description": "Prescribed antibiotics",
+    "bloodGroup": "blood-group-id"
+  }'
+```
+</CodeGroup>
+
+Create a medical record for a citizen.
+
+#### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Record type: `MEDICATION`, `ALLERGY`, `CONDITION`, etc.
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Medical record description
+</ParamField>
+
+<ParamField body="bloodGroup" type="string">
+  Blood group value ID
+</ParamField>
+
+### Update Medical Record
+
+<CodeGroup>
+```bash PUT /api/ems-fd/medical-records/:id
+curl -X PUT https://your-cad.com/api/ems-fd/medical-records/{recordId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "MEDICATION",
+    "description": "Updated medication details"
+  }'
+```
+</CodeGroup>
+
+Update an existing medical record.
+
+#### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Medical record ID
+</ParamField>
+
+### Delete Medical Record
+
+<CodeGroup>
+```bash DELETE /api/ems-fd/medical-records/:id
+curl -X DELETE https://your-cad.com/api/ems-fd/medical-records/{recordId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete a medical record.
+
+---
+
+## Doctor Visits
+
+### Create Doctor Visit
+
+<CodeGroup>
+```bash POST /api/ems-fd/doctor-visit
+curl -X POST https://your-cad.com/api/ems-fd/doctor-visit \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "diagnosis": "Common cold",
+    "medications": "Rest and fluids",
+    "conditions": "Mild fever",
+    "description": "Patient presented with cold symptoms"
+  }'
+```
+</CodeGroup>
+
+Create a doctor visit record.
+
+#### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID
+</ParamField>
+
+<ParamField body="diagnosis" type="string" required>
+  Medical diagnosis
+</ParamField>
+
+<ParamField body="medications" type="string">
+  Prescribed medications
+</ParamField>
+
+<ParamField body="conditions" type="string">
+  Medical conditions observed
+</ParamField>
+
+<ParamField body="description" type="string">
+  Additional notes
+</ParamField>
+
+---
+
+## Declare Citizen Dead/Alive
+
+<CodeGroup>
+```bash POST /api/ems-fd/declare/:citizenId
+curl -X POST https://your-cad.com/api/ems-fd/declare/{citizenId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Declare a citizen as deceased or alive (toggle).
+
+### Path Parameters
+
+<ParamField path="citizenId" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Response
+
+Returns the updated citizen object with `dead` status and `dateOfDead` timestamp.
+
+<Note>
+If the `CITIZEN_DELETE_ON_DEAD` feature is enabled, the citizen will be permanently deleted instead of marked as deceased.
+</Note>
+
+---
+
+## Get Dead Citizens
+
+<CodeGroup>
+```bash GET /api/ems-fd/dead-citizens
+curl -X GET https://your-cad.com/api/ems-fd/dead-citizens \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all citizens marked as deceased.
+
+### Response
+
+<ResponseField name="totalCount" type="number">
+  Total number of dead citizens
+</ResponseField>
+
+<ResponseField name="citizens" type="array">
+  Array of deceased citizen objects
+</ResponseField>
+
+---
+
+## Upload Deputy Image
+
+<CodeGroup>
+```bash POST /api/ems-fd/image/:id
+curl -X POST https://your-cad.com/api/ems-fd/image/{deputyId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -F "image=@/path/to/image.jpg"
+```
+</CodeGroup>
+
+Upload an image for a deputy.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Deputy ID
+</ParamField>
+
+### Request Body
+
+<ParamField body="image" type="file" required>
+  Image file (JPEG, PNG, WebP)
+</ParamField>
+
+---
+
+## Get Deputy Logs
+
+<CodeGroup>
+```bash GET /api/ems-fd/logs
+curl -X GET "https://your-cad.com/api/ems-fd/logs?skip=0&includeAll=false" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get time logs for deputies.
+
+### Query Parameters
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all logs
+</ParamField>
+
+<ParamField query="emsFdDeputyId" type="string">
+  Filter by specific deputy ID
+</ParamField>
+
+<ParamField query="currentUserOnly" type="boolean">
+  Only show current user's logs
+</ParamField>
+
+### Response
+
+<ResponseField name="totalCount" type="number">
+  Total log entries
+</ResponseField>
+
+<ResponseField name="logs" type="array">
+  Array of log objects with start/end times
+</ResponseField>

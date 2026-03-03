@@ -1,0 +1,288 @@
+---
+title: Value Management
+description: Manage value lists including vehicle types, departments, and other configurable options
+---
+
+## Overview
+
+Values are the building blocks of your SnailyCAD configuration. They define selectable options throughout the system, such as vehicle types, departments, license categories, and more. Proper value management ensures your CAD reflects your community's specific needs.
+
+## Accessing Values
+
+Navigate to **Admin** > **Values** to access the value management interface. You'll see a list of all available value types.
+
+### Available Value Types
+
+**Vehicle Values:**
+- **Vehicle** - Vehicle makes/models (e.g., Ford, Chevrolet)
+- **Vehicle Trim Level** - Vehicle trims (e.g., XLT, Sport, Limited)
+- **Vehicle Body Type** - Body styles (e.g., Sedan, SUV, Truck)
+- **Vehicle Flag** - Vehicle status flags (e.g., Stolen, Wanted)
+
+**License & Legal:**
+- **License** - License types (e.g., Driver's License, Pilot License)
+- **Drivers License Category** - License categories (e.g., Class A, B, C)
+- **Blood Group** - Blood types (e.g., A+, O-, AB+)
+
+**Citizen Values:**
+- **Ethnicity** - Ethnic backgrounds
+- **Gender** - Gender options
+- **Citizen Flag** - Citizen status flags (e.g., Gang Member, Dangerous)
+- **Address Flag** - Location markers (e.g., High Crime Area)
+
+**Law Enforcement:**
+- **Department** - Departments/agencies (e.g., Police, Sheriff)
+- **Division** - Department divisions (e.g., Patrol, SWAT, K9)
+- **Officer Rank** - Rank structure (e.g., Officer, Sergeant, Lieutenant)
+- **Qualification** - Certifications (e.g., Firearms Instructor, Field Training Officer)
+- **Codes 10** - 10-codes by department (e.g., 10-4, 10-97)
+- **Emergency Vehicle** - Department vehicles (e.g., Unit 1-Adam-12)
+
+**Weapons:**
+- **Weapon** - Weapon types (e.g., Glock 17, M4A1)
+- **Weapon Flag** - Weapon status flags (e.g., Illegal, Stolen)
+
+**Other:**
+- **Impound Lot** - Vehicle impound locations
+- **Call Type** - 911 call categories (e.g., Traffic Stop, Robbery)
+- **Penal Code** - Laws and violations
+
+## Managing Values
+
+Each value type has its own management page with consistent functionality.
+
+### Viewing Values
+
+The value list displays:
+- **ID** - Unique identifier (visible in developer mode)
+- **Value** - The display name
+- **Is Disabled** - Whether the value is active
+- **Created At** - When the value was created
+- Type-specific columns (e.g., Department, Color, Hash)
+
+Features:
+- **Search** - Filter by value name
+- **Sorting** - Sort by any column
+- **Pagination** - 35 values per page
+- **Drag and Drop** - Reorder values by dragging rows
+
+```tsx
+// Source: apps/client/src/pages/admin/values/[path].tsx:76-410
+```
+
+### Creating Values
+
+1. Click **Add [Value Type]** button
+2. Fill in the required fields:
+   - **Value** - Display name (required)
+   - Type-specific fields (see below)
+3. Click **Create**
+
+The value will appear at the top of the list.
+
+### Editing Values
+
+1. Click **Edit** next to the value
+2. Modify the fields
+3. Click **Save**
+
+Changes are logged in the audit logs.
+
+### Deleting Values
+
+1. Click **Delete** next to the value
+2. Confirm deletion
+
+<Warning>
+  Values in use cannot be deleted. You must first remove all references to the value (e.g., vehicles using a vehicle type).
+</Warning>
+
+If a value is in use, the delete button is disabled with a tooltip explaining why.
+
+### Bulk Deletion
+
+1. Select multiple values using checkboxes
+2. Click **Delete Selected Values**
+3. Review the count
+4. Confirm deletion
+
+You can:
+- Select all values on current page
+- Click "Select all [X] items" to select across all pages
+
+The system will skip values that are in use and report:
+- Number of values successfully deleted
+- Number of values that failed (in use)
+
+```tsx
+// Source: apps/client/src/pages/admin/values/[path].tsx:200-231
+```
+
+### Reordering Values
+
+Values can be reordered by drag-and-drop:
+
+1. Click and hold on a table row
+2. Drag to the desired position
+3. Release
+4. Changes are saved automatically
+
+A "Saving..." indicator appears during the save operation.
+
+```tsx
+// Source: apps/client/src/pages/admin/values/[path].tsx:160-188
+```
+
+## Value-Specific Fields
+
+### Department
+
+- **Value** - Department name
+- **Type** - Department type (LEO or EMS_FD)
+- **Callsign** - Optional department prefix (e.g., "1" for 1-Adam-12)
+- **Whitelisted** - Require approval to join
+- **Is Default** - Default department for new units
+- **Default Officer Rank** - Starting rank for new officers
+- **Color** - Department color (hex code)
+
+### Division
+
+- **Value** - Division name
+- **Department** - Parent department (required)
+- **Callsign** - Optional division prefix
+- **Paired Unit Template** - Template for paired units
+
+### Emergency Vehicle
+
+- **Value** - Vehicle name/callsign
+- **Department** - Assigned department
+- **Divisions** - Assigned divisions (optional)
+
+### Officer Rank
+
+- **Value** - Rank name
+- **Department** - Assigned department (optional)
+- **Image** - Rank insignia (optional)
+
+### Vehicle
+
+- **Value** - Vehicle make/model
+- **Game Hash** - FiveM/game hash (optional)
+- **Trim Levels** - Associated trim options
+
+### Penal Code
+
+Managed separately at **Admin** > **Values** > **Penal Code**:
+- **Title** - Law name
+- **Description** - Law description
+- **Type** - Infraction, Misdemeanor, or Felony
+- **Bail Amount** - Default bail
+- **Jail Time** - Default sentence
+- **Fine Amount** - Default fine
+
+See the [Penal Code documentation](https://docs.snailycad.org/docs/features/general/values/penal-code) for details.
+
+## Importing Values
+
+SnailyCAD supports bulk import from external sources:
+
+1. Click the **Options** dropdown
+2. Select **Import via file** or **Import from URL**
+3. Follow the import wizard
+
+**Import Methods:**
+- **File Upload** - Upload a JSON file
+- **URL Import** - Import from a public URL
+- **Pre-made Templates** - Use community templates
+
+<Note>
+  Imported values are added to existing values, not replaced. Duplicates are skipped.
+</Note>
+
+### Import Format
+
+JSON format example:
+```json
+[
+  {
+    "value": "Ford",
+    "hash": "ford"
+  },
+  {
+    "value": "Chevrolet",
+    "hash": "chevrolet"
+  }
+]
+```
+
+## Exporting Values
+
+1. Click the **Options** dropdown
+2. Select **Export**
+3. Choose export format (JSON)
+4. Download the file
+
+Use exports to:
+- Backup your configuration
+- Share values with other communities
+- Migrate to a new instance
+
+## Disabling Values
+
+Instead of deleting values in use, disable them:
+
+1. Edit the value
+2. Check **Is Disabled**
+3. Save
+
+Disabled values:
+- Don't appear in dropdowns for new records
+- Remain visible on existing records
+- Can be re-enabled at any time
+
+## Value Positions
+
+Values display in the order defined by their position. This affects:
+- Dropdown menus throughout the CAD
+- Reports and exports
+- Mobile applications
+
+Use drag-and-drop to reorder values to match your preferences.
+
+## Best Practices
+
+1. **Consistent Naming** - Use clear, consistent naming conventions
+2. **Regular Cleanup** - Disable unused values instead of deleting
+3. **Department Structure** - Plan your department hierarchy before creating divisions
+4. **Import Templates** - Start with community templates and customize
+5. **Game Hashes** - Use correct FiveM hashes for vehicle spawning
+6. **Documentation Links** - Reference the [value documentation](https://docs.snailycad.org/docs/features/general/values/) for each type
+
+## Troubleshooting
+
+### Cannot Delete Value
+
+- **In Use**: The value is referenced by citizens, vehicles, units, etc.
+- **Solution**: Find and remove all references, or disable the value instead
+
+### Import Failed
+
+- **Invalid Format**: Check JSON syntax
+- **Missing Fields**: Ensure all required fields are present
+- **Duplicates**: Duplicate values are skipped automatically
+
+### Values Not Appearing
+
+- **Is Disabled**: Check if the value is disabled
+- **Department Filter**: Some values are department-specific
+- **Cache**: Clear browser cache and refresh
+
+### Wrong Sort Order
+
+- **Drag-and-Drop**: Use drag-and-drop to reorder
+- **Position Not Saved**: Check for "Saving..." indicator after reordering
+
+## Related Documentation
+
+- [Value Types Documentation](https://docs.snailycad.org/docs/features/general/values/) - Detailed guide for each value type
+- [Custom Fields](/admin/custom-fields) - Add custom fields to value categories

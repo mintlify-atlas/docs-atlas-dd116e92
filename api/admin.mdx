@@ -1,0 +1,493 @@
+---
+title: Admin
+description: Administrative endpoints for CAD management
+---
+
+## Overview
+
+The Admin API provides endpoints for managing CAD settings, users, values, and administrative operations.
+
+<Warning>
+All admin endpoints require appropriate administrative permissions. Access is restricted based on user rank and specific permission grants.
+</Warning>
+
+---
+
+## Get Dashboard Statistics
+
+<CodeGroup>
+```bash GET /api/admin
+curl -X GET https://your-cad.com/api/admin \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get administrative dashboard statistics and metrics.
+
+### Response
+
+<ResponseField name="activeUsers" type="number">
+  Number of accepted/active users
+</ResponseField>
+
+<ResponseField name="pendingUsers" type="number">
+  Number of users pending whitelist approval
+</ResponseField>
+
+<ResponseField name="bannedUsers" type="number">
+  Number of banned users
+</ResponseField>
+
+<ResponseField name="createdCitizens" type="number">
+  Total citizens created
+</ResponseField>
+
+<ResponseField name="arrestCitizens" type="number">
+  Citizens with arrest records
+</ResponseField>
+
+<ResponseField name="deadCitizens" type="number">
+  Citizens marked as deceased
+</ResponseField>
+
+<ResponseField name="officerCount" type="number">
+  Total officers
+</ResponseField>
+
+<ResponseField name="onDutyOfficers" type="number">
+  Currently on-duty officers
+</ResponseField>
+
+<ResponseField name="suspendedOfficers" type="number">
+  Suspended officers
+</ResponseField>
+
+<ResponseField name="emsDeputiesCount" type="number">
+  Total EMS-FD deputies
+</ResponseField>
+
+<ResponseField name="onDutyEmsDeputies" type="number">
+  Currently on-duty deputies
+</ResponseField>
+
+<ResponseField name="vehicles" type="number">
+  Total registered vehicles
+</ResponseField>
+
+<ResponseField name="impoundedVehicles" type="number">
+  Impounded vehicles
+</ResponseField>
+
+<ResponseField name="imageData" type="object">
+  Image storage statistics
+</ResponseField>
+
+---
+
+## Get Changelog
+
+<CodeGroup>
+```bash GET /api/admin/changelog
+curl -X GET https://your-cad.com/api/admin/changelog
+```
+</CodeGroup>
+
+Get the latest SnailyCAD release changelog from GitHub.
+
+### Response
+
+Returns the changelog markdown content for the current version.
+
+---
+
+## User Management
+
+### Get Users
+
+<CodeGroup>
+```bash GET /api/admin/manage/users
+curl -X GET "https://your-cad.com/api/admin/manage/users?skip=0" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all users with pagination and filtering.
+
+#### Query Parameters
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all users
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search by username
+</ParamField>
+
+### Update User
+
+<CodeGroup>
+```bash PUT /api/admin/manage/users/:id
+curl -X PUT https://your-cad.com/api/admin/manage/users/{userId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rank": "ADMIN",
+    "permissions": ["Leo", "Dispatch"],
+    "whitelistStatus": "ACCEPTED"
+  }'
+```
+</CodeGroup>
+
+Update a user's rank, permissions, or whitelist status.
+
+#### Request Body
+
+<ParamField body="rank" type="string">
+  User rank: `OWNER`, `ADMIN`, `USER`
+</ParamField>
+
+<ParamField body="permissions" type="array">
+  Array of permission strings
+</ParamField>
+
+<ParamField body="whitelistStatus" type="string">
+  Whitelist status: `ACCEPTED`, `PENDING`, `DECLINED`
+</ParamField>
+
+### Ban/Unban User
+
+<CodeGroup>
+```bash POST /api/admin/manage/users/:id/ban
+curl -X POST https://your-cad.com/api/admin/manage/users/{userId}/ban \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "banned": true,
+    "banReason": "Violation of terms"
+  }'
+```
+</CodeGroup>
+
+Ban or unban a user.
+
+#### Request Body
+
+<ParamField body="banned" type="boolean" required>
+  Ban (true) or unban (false)
+</ParamField>
+
+<ParamField body="banReason" type="string">
+  Reason for ban (required when banning)
+</ParamField>
+
+---
+
+## CAD Settings
+
+### Get CAD Settings
+
+<CodeGroup>
+```bash GET /api/admin/manage/cad-settings
+curl -X GET https://your-cad.com/api/admin/manage/cad-settings \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get current CAD settings and configuration.
+
+### Update CAD Settings
+
+<CodeGroup>
+```bash PUT /api/admin/manage/cad-settings
+curl -X PUT https://your-cad.com/api/admin/manage/cad-settings \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My CAD Instance",
+    "areaOfPlay": "San Andreas",
+    "whitelisted": true,
+    "registrationCode": "SECRET123"
+  }'
+```
+</CodeGroup>
+
+Update CAD settings.
+
+#### Request Body
+
+<ParamField body="name" type="string">
+  CAD instance name
+</ParamField>
+
+<ParamField body="areaOfPlay" type="string">
+  Default area of play
+</ParamField>
+
+<ParamField body="whitelisted" type="boolean">
+  Enable whitelist for new users
+</ParamField>
+
+<ParamField body="registrationCode" type="string">
+  Required registration code
+</ParamField>
+
+<ParamField body="towWhitelisted" type="boolean">
+  Whitelist tow access
+</ParamField>
+
+<ParamField body="taxiWhitelisted" type="boolean">
+  Whitelist taxi access
+</ParamField>
+
+---
+
+## Values Management
+
+### Get Values
+
+<CodeGroup>
+```bash GET /api/admin/values/:path
+curl -X GET https://your-cad.com/api/admin/values/penal_code \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get values for a specific category.
+
+#### Path Parameters
+
+<ParamField path="path" type="string" required>
+  Value category: `penal_code`, `vehicle`, `weapon`, `gender`, `ethnicity`, `license`, etc.
+</ParamField>
+
+### Create Value
+
+<CodeGroup>
+```bash POST /api/admin/values/:path
+curl -X POST https://your-cad.com/api/admin/values/penal_code \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": "Assault",
+    "type": "FELONY",
+    "jailTime": {"min": 10, "max": 20},
+    "fine": {"min": 500, "max": 1000}
+  }'
+```
+</CodeGroup>
+
+Create a new value.
+
+### Update Value
+
+<CodeGroup>
+```bash PUT /api/admin/values/:path/:id
+curl -X PUT https://your-cad.com/api/admin/values/penal_code/{valueId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": "Aggravated Assault"
+  }'
+```
+</CodeGroup>
+
+Update an existing value.
+
+### Delete Value
+
+<CodeGroup>
+```bash DELETE /api/admin/values/:path/:id
+curl -X DELETE https://your-cad.com/api/admin/values/penal_code/{valueId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete a value.
+
+---
+
+## Citizens Management
+
+### Get All Citizens
+
+<CodeGroup>
+```bash GET /api/admin/manage/citizens
+curl -X GET "https://your-cad.com/api/admin/manage/citizens?skip=0" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all citizens in the CAD.
+
+#### Query Parameters
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query
+</ParamField>
+
+---
+
+## Units Management
+
+### Get All Officers
+
+<CodeGroup>
+```bash GET /api/admin/manage/units/officers
+curl -X GET https://your-cad.com/api/admin/manage/units/officers \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all LEO officers.
+
+### Get All Deputies
+
+<CodeGroup>
+```bash GET /api/admin/manage/units/deputies
+curl -X GET https://your-cad.com/api/admin/manage/units/deputies \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all EMS-FD deputies.
+
+### Suspend/Unsuspend Unit
+
+<CodeGroup>
+```bash POST /api/admin/manage/units/:id/suspend
+curl -X POST https://your-cad.com/api/admin/manage/units/{unitId}/suspend \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "suspended": true
+  }'
+```
+</CodeGroup>
+
+Suspend or unsuspend a unit.
+
+---
+
+## Import/Export
+
+### Import Citizens
+
+<CodeGroup>
+```bash POST /api/admin/import/citizens
+curl -X POST https://your-cad.com/api/admin/import/citizens \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -F "file=@citizens.json"
+```
+</CodeGroup>
+
+Bulk import citizens from JSON file.
+
+### Import Vehicles
+
+<CodeGroup>
+```bash POST /api/admin/import/vehicles
+curl -X POST https://your-cad.com/api/admin/import/vehicles \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -F "file=@vehicles.json"
+```
+</CodeGroup>
+
+Bulk import vehicles from JSON file.
+
+### Import Weapons
+
+<CodeGroup>
+```bash POST /api/admin/import/weapons
+curl -X POST https://your-cad.com/api/admin/import/weapons \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -F "file=@weapons.json"
+```
+</CodeGroup>
+
+Bulk import weapons from JSON file.
+
+---
+
+## Courthouse
+
+### Get Pending Warrants
+
+<CodeGroup>
+```bash GET /api/admin/manage/courthouse/pending-warrants
+curl -X GET https://your-cad.com/api/admin/manage/courthouse/pending-warrants \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get warrants pending approval.
+
+### Get Pending Expungement Requests
+
+<CodeGroup>
+```bash GET /api/admin/manage/courthouse/pending-expungement-requests
+curl -X GET https://your-cad.com/api/admin/manage/courthouse/pending-expungement-requests \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get expungement requests pending approval.
+
+### Get Pending Name Changes
+
+<CodeGroup>
+```bash GET /api/admin/manage/courthouse/pending-name-change-requests
+curl -X GET https://your-cad.com/api/admin/manage/courthouse/pending-name-change-requests \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get name change requests pending approval.
+
+---
+
+## Discord Integration
+
+### Get Discord Settings
+
+<CodeGroup>
+```bash GET /api/admin/manage/cad-settings/discord
+curl -X GET https://your-cad.com/api/admin/manage/cad-settings/discord \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get Discord integration settings.
+
+### Update Discord Webhooks
+
+<CodeGroup>
+```bash POST /api/admin/manage/cad-settings/discord/webhooks
+curl -X POST https://your-cad.com/api/admin/manage/cad-settings/discord/webhooks \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "CALL_911",
+    "webhookUrl": "https://discord.com/api/webhooks/..."
+  }'
+```
+</CodeGroup>
+
+Configure Discord webhooks for various events.
+
+#### Request Body
+
+<ParamField body="type" type="string" required>
+  Webhook type: `CALL_911`, `BOLO`, `UNIT_STATUS`, `PANIC_BUTTON`, etc.
+</ParamField>
+
+<ParamField body="webhookUrl" type="string" required>
+  Discord webhook URL
+</ParamField>

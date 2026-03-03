@@ -1,122 +1,127 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "SnailyCAD",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#1E40AF"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/SnailyCAD/snaily-cadv4"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/SnailyCAD/snaily-cadv4"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "features",
+              "installation"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Configuration",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "configuration/environment-variables",
+              "configuration/cad-settings",
+              "configuration/permissions"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "User Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/dispatch",
+              "guides/law-enforcement",
+              "guides/ems-fire",
+              "guides/citizens",
+              "guides/tow-taxi"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Admin Guide",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "admin/user-management",
+              "admin/values",
+              "admin/custom-fields",
+              "admin/custom-roles",
+              "admin/audit-logs"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/discord",
+              "integrations/fivem",
+              "integrations/live-map",
+              "integrations/webhooks"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Deployment",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Installation Methods",
             "pages": [
-              "api-reference/introduction"
+              "deployment/docker",
+              "deployment/standalone",
+              "deployment/reverse-proxy"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Operations",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "deployment/updating",
+              "deployment/backup-restore",
+              "deployment/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "developer/getting-started",
+              "developer/architecture",
+              "developer/contributing"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/authentication",
+              "api/citizens",
+              "api/leo",
+              "api/ems-fd",
+              "api/dispatch",
+              "api/admin"
+            ]
+          },
+          {
+            "group": "Database",
+            "pages": [
+              "developer/database-schema",
+              "developer/migrations"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

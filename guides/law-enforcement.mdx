@@ -1,0 +1,436 @@
+---
+title: "Law Enforcement"
+description: "Complete guide to using the LEO interface for traffic stops, arrests, warrants, and records"
+---
+
+## Overview
+
+The Law Enforcement Officer (LEO) interface provides tools for officers to manage their on-duty activities, conduct searches, create records, and coordinate with dispatch and other units.
+
+## Getting Started
+
+### Creating Your Officer
+
+<Steps>
+  <Step title="Navigate to My Officers">
+    Go to **Officer** → **My Officers** from the main navigation.
+  </Step>
+  <Step title="Create Officer">
+    Click **Create Officer** and fill in the details:
+    - Select a citizen to base the officer on
+    - Choose department and division
+    - Select badge number
+    - Upload officer image (optional)
+  </Step>
+  <Step title="Set Callsign">
+    Your callsign will be generated based on your department's configuration.
+  </Step>
+</Steps>
+
+### Going On-Duty
+
+<Steps>
+  <Step title="Access Officer Dashboard">
+    Navigate to the **Officer** page from the main navigation.
+  </Step>
+  <Step title="Select Officer">
+    Click **Select Officer** and choose which officer to go on-duty with.
+  </Step>
+  <Step title="Set Initial Status">
+    Choose your initial 10-code status (e.g., 10-8 for available).
+  </Step>
+  <Step title="View Dashboard">
+    You're now on-duty and can see active calls, units, and warrants.
+  </Step>
+</Steps>
+
+<Note>
+  Only one officer can be on-duty at a time per user.
+</Note>
+
+## Changing Status
+
+Update your status to communicate your availability and current activity:
+
+<Steps>
+  <Step title="Access Status Area">
+    Your current status is displayed in the status area of the utility panel.
+  </Step>
+  <Step title="Select New Status">
+    Click on the status dropdown and select a new 10-code.
+  </Step>
+  <Step title="Add Notes">
+    Optionally add notes about your status change.
+  </Step>
+</Steps>
+
+Common status codes:
+- **10-8** - Available for calls
+- **10-7** - Out of service
+- **10-6** - Busy
+- **10-97** - Arrived on scene
+- **10-23** - Arrived at scene
+
+<Tip>
+  Your CAD administrator can configure custom 10-codes specific to your department.
+</Tip>
+
+## Search Functions
+
+### Name Search
+
+Search for citizens to view their records and information:
+
+<Steps>
+  <Step title="Open Name Search">
+    Click **Name Search** in the utility panel.
+  </Step>
+  <Step title="Enter Search Criteria">
+    Search by:
+    - First name and last name
+    - Date of birth
+    - Social Security Number (if enabled)
+  </Step>
+  <Step title="View Results">
+    Select a citizen from the results to view:
+    - Personal information
+    - License status (driver's, pilot, weapon, etc.)
+    - Active warrants
+    - Criminal records
+    - Registered vehicles
+    - Registered weapons
+  </Step>
+</Steps>
+
+From the search results, you can:
+- Create arrest reports, tickets, or written warnings
+- Create warrants
+- View detailed records
+- See flags or alerts on the citizen
+
+### Vehicle Search (Plate Search)
+
+Run a plate check on vehicles:
+
+<Steps>
+  <Step title="Open Plate Search">
+    Click **Plate Search** in the utility panel.
+  </Step>
+  <Step title="Enter Plate Number">
+    Type the vehicle's license plate number or VIN.
+  </Step>
+  <Step title="View Results">
+    Review information including:
+    - Owner name and details
+    - Vehicle make, model, and color
+    - Registration status
+    - Insurance status
+    - DMV status (if enabled)
+    - Vehicle flags or alerts
+  </Step>
+</Steps>
+
+### Weapon Search
+
+Search for registered weapons:
+
+<Steps>
+  <Step title="Open Weapon Search">
+    Click **Weapon Search** in the utility panel.
+  </Step>
+  <Step title="Enter Serial Number">
+    Input the weapon's serial number.
+  </Step>
+  <Step title="View Registration">
+    See the weapon's registration details and owner information.
+  </Step>
+</Steps>
+
+### Business Search
+
+Look up business information:
+
+- Business name and owner
+- Business address
+- License status
+- Employees
+
+## Traffic Stops and Records
+
+### Creating a Traffic Stop Record
+
+<Steps>
+  <Step title="Search for Citizen">
+    Use Name Search or Plate Search to find the person you've stopped.
+  </Step>
+  <Step title="Choose Record Type">
+    From the search results, select:
+    - **Written Warning** - For minor infractions
+    - **Ticket** - For citable offenses
+    - **Arrest Report** - For arrests
+  </Step>
+  <Step title="Select Violations">
+    Choose violations from the penal code list.
+  </Step>
+  <Step title="Add Details">
+    Enter:
+    - Notes about the stop
+    - Location
+    - Postal code (if required)
+    - Officer narrative
+  </Step>
+  <Step title="Set Penalties">
+    For arrests:
+    - Set jail time
+    - Add fines
+    - Determine if the person should be jailed immediately
+  </Step>
+  <Step title="Create Record">
+    Click **Create** to save the record to the citizen's history.
+  </Step>
+</Steps>
+
+<Note>
+  All records are permanently stored and viewable by authorized personnel.
+</Note>
+
+## Warrant Management
+
+### Creating a Warrant
+
+<Steps>
+  <Step title="Open Warrant Modal">
+    Click **Create Warrant** in the utility panel, or create from a name search result.
+  </Step>
+  <Step title="Select Citizen">
+    Choose the citizen the warrant is for.
+  </Step>
+  <Step title="Enter Details">
+    - **Description** - Reason for the warrant
+    - **Status** - Active or Inactive
+  </Step>
+  <Step title="Create Warrant">
+    The warrant will appear in the active warrants list.
+  </Step>
+</Steps>
+
+### Viewing Active Warrants
+
+The **Active Warrants** section on your dashboard shows all active warrants. Click on any warrant to:
+- View full details
+- Serve the warrant
+- Update warrant status
+
+## BOLO Management
+
+### Creating a BOLO
+
+<Steps>
+  <Step title="Open BOLO Modal">
+    Click **Create BOLO** in the utility panel.
+  </Step>
+  <Step title="Choose Type">
+    Select person, vehicle, or other.
+  </Step>
+  <Step title="Enter Information">
+    Provide detailed description of what to look out for.
+  </Step>
+  <Step title="Share with Units">
+    The BOLO will be visible to all active units and dispatch.
+  </Step>
+</Steps>
+
+### Viewing Active BOLOs
+
+Check the **Active BOLOs** section to see all current BOLOs. You can:
+- View details
+- Update BOLOs you created
+- Remove expired BOLOs
+
+## Working with 911 Calls
+
+### Responding to Calls
+
+<Steps>
+  <Step title="View Active Calls">
+    See all active 911 calls in the **Active Calls** section.
+  </Step>
+  <Step title="Self-Assign">
+    Click **Assign Self** on a call to add yourself to it.
+  </Step>
+  <Step title="Update Status">
+    As you respond:
+    - Update your 10-code (e.g., 10-76 for en route)
+    - Add notes to the call
+    - Update call description as needed
+  </Step>
+  <Step title="Close Call">
+    Once resolved, mark yourself as available or close the call.
+  </Step>
+</Steps>
+
+<Tip>
+  Dispatch can also assign you to calls. You'll see the assignment in real-time.
+</Tip>
+
+## Incident Coordination
+
+For major events, incidents help coordinate multiple units:
+
+- View assigned incidents in the **Active Incidents** section
+- Add events and updates to the incident
+- Coordinate with other assigned units
+- View incident timeline and all related calls
+
+## Jail Management
+
+### Viewing Jailed Citizens
+
+<Steps>
+  <Step title="Navigate to Jail">
+    Go to **Officer** → **Jail** from the navigation.
+  </Step>
+  <Step title="View List">
+    See all citizens currently in jail with their:
+    - Arrest information
+    - Remaining time
+    - Charges
+  </Step>
+</Steps>
+
+### Releasing Citizens
+
+<Steps>
+  <Step title="Select Citizen">
+    Click on a jailed citizen from the list.
+  </Step>
+  <Step title="Choose Release Type">
+    - **Released** - Time served or other reasons
+    - **Bail Posted** - Citizen posted bail
+  </Step>
+  <Step title="Confirm Release">
+    The citizen will be removed from the jail roster.
+  </Step>
+</Steps>
+
+## Impound Lot
+
+Manage impounded vehicles:
+
+<Steps>
+  <Step title="Navigate to Impound Lot">
+    Go to **Officer** → **Impound Lot**.
+  </Step>
+  <Step title="View Impounded Vehicles">
+    See all vehicles currently impounded.
+  </Step>
+  <Step title="Release Vehicle">
+    Select a vehicle and click **Release** when authorized.
+  </Step>
+</Steps>
+
+## DMV (Department of Motor Vehicles)
+
+Process DMV requests:
+
+- Review pending vehicle registrations
+- Approve or deny registrations
+- Update vehicle statuses
+- Process license applications
+
+## Bureau of Firearms
+
+Manage weapon registrations:
+
+- Review weapon registration applications
+- Approve or deny registrations
+- Update weapon statuses
+- Track weapon transfers
+
+## Notepad
+
+Use the notepad to keep personal notes during your shift:
+
+<Steps>
+  <Step title="Open Notepad">
+    Click **Notepad** in the utility panel.
+  </Step>
+  <Step title="Take Notes">
+    Write notes about ongoing situations, citizen information, or anything else.
+  </Step>
+  <Step title="Save">
+    Notes are automatically saved and persist across sessions.
+  </Step>
+</Steps>
+
+## Panic Button
+
+<Warning>
+  Use the panic button only in genuine emergency situations where you need immediate assistance.
+</Warning>
+
+<Steps>
+  <Step title="Activate Panic">
+    Click the **Panic Button** in the utility panel.
+  </Step>
+  <Step title="Dispatch Notified">
+    Dispatch and all units receive an immediate alert.
+  </Step>
+  <Step title="Wait for Response">
+    Backup units will be dispatched to your location.
+  </Step>
+</Steps>
+
+## Department Information
+
+View your department's information:
+
+- Department address and contact
+- Department policies
+- Chain of command
+- Department announcements
+
+## Supervisor Functions
+
+Supervisors have additional capabilities:
+
+### DL Exams
+
+Manage driver's license examinations:
+- Review pending applications
+- Conduct exams
+- Approve or fail applicants
+
+### Citizen Logs
+
+View detailed logs of citizen activities:
+- Search history
+- Records created
+- Interactions with LEO
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always Update Your Status">
+    Keep your 10-code status current so dispatch knows your availability and location.
+  </Accordion>
+  <Accordion title="Document Thoroughly">
+    Provide detailed notes in all records. Include relevant facts, circumstances, and observations.
+  </Accordion>
+  <Accordion title="Verify Information">
+    Always run name and plate searches before taking action to ensure you have accurate information.
+  </Accordion>
+  <Accordion title="Coordinate with Dispatch">
+    Communicate with dispatch when responding to calls, changing locations, or encountering issues.
+  </Accordion>
+  <Accordion title="Check for Warrants">
+    Always check for active warrants during traffic stops and citizen interactions.
+  </Accordion>
+</AccordionGroup>
+
+## Keyboard Shortcuts
+
+- **Ctrl/Cmd + K** - Quick search
+- **N** - Open notepad
+- **P** - Open panic button (must confirm)
+- **Esc** - Close open modals

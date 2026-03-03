@@ -1,0 +1,384 @@
+---
+title: Database migrations
+description: Managing database schema changes with Prisma Migrate
+---
+
+SnailyCAD uses [Prisma Migrate](https://www.prisma.io/docs/concepts/components/prisma-migrate) to manage database schema changes. All migrations are version-controlled and applied automatically during deployment.
+
+## Migration Files
+
+Migrations are stored in `apps/api/prisma/migrations/` with the following structure:
+
+```
+apps/api/prisma/migrations/
+├── 20231201000000_initial_schema/
+│   └── migration.sql
+├── 20231215000000_add_custom_fields/
+│   └── migration.sql
+├── 20240101000000_update_permissions/
+│   └── migration.sql
+└── migration_lock.toml
+```
+
+Each migration folder contains:
+- Timestamp prefix (YYYYMMDDHHMMSS)
+- Descriptive name
+- `migration.sql` file with SQL statements
+
+## Development Workflow
+
+### Creating a New Migration
+
+When you modify the Prisma schema (`apps/api/prisma/schema.prisma`), create a migration:
+
+<Steps>
+  <Step title="Update the schema">
+    Modify `apps/api/prisma/schema.prisma` with your changes:
+    
+    ```prisma
+    model Citizen {
+      id          String   @id @default(cuid())
+      name        String
+      surname     String
+      // Add new field
+      middleName  String?
+      // ...
+    }
+    ```
+  </Step>
+  
+  <Step title="Create the migration">
+    Run the migration command:
+    
+    ```bash
+    pnpm --filter "@snailycad/api" prisma migrate dev --name add_middle_name
+    ```
+    
+    This will:
+    1. Generate SQL for the schema changes
+    2. Create a new migration file
+    3. Apply the migration to your local database
+    4. Regenerate the Prisma client
+  </Step>
+  
+  <Step title="Review the migration">
+    Check the generated SQL in `apps/api/prisma/migrations/<timestamp>_add_middle_name/migration.sql`:
+    
+    ```sql
+    -- AlterTable
+    ALTER TABLE "Citizen" ADD COLUMN "middleName" TEXT;
+    ```
+  </Step>
+  
+  <Step title="Commit the migration">
+    Add the migration files to version control:
+    
+    ```bash
+    git add apps/api/prisma/migrations/
+    git add apps/api/prisma/schema.prisma
+    git commit -m "feat: add middle name field to citizens"
+    ```
+  </Step>
+</Steps>
+
+### Applying Migrations
+
+In development, migrations are applied automatically when you run:
+
+```bash
+pnpm --filter "@snailycad/api" prisma migrate dev
+```
+
+In production (Docker or standalone), migrations are applied during startup:
+
+```bash
+pnpm --filter "@snailycad/api" prisma migrate deploy
+```
+
+<Note>
+  The `prisma migrate deploy` command is automatically run in the Docker container startup (see `apps/api/package.json:7`).
+</Note>
+
+## Production Migrations
+
+### Docker Deployment
+
+Migrations are applied automatically when the API container starts:
+
+```json
+// apps/api/package.json
+{
+  "scripts": {
+    "start": "pnpm prisma migrate deploy && pnpm prisma generate && node --inspect dist/main.js"
+  }
+}
+```
+
+The startup sequence:
+1. Apply pending migrations (`prisma migrate deploy`)
+2. Generate Prisma client (`prisma generate`)
+3. Start the API server
+
+### Standalone Deployment
+
+For standalone installations, migrations are applied during the update process:
+
+```bash
+# From package.json
+pnpm run full-start
+```
+
+This runs:
+```bash
+git pull && pnpm install && pnpm run build && pnpm run start
+```
+
+The `start` script includes `prisma migrate deploy`.
+
+## Common Migration Tasks
+
+### Adding a Field
+
+```prisma
+model Citizen {
+  id          String   @id @default(cuid())
+  name        String
+  // Add optional field
+  nickname    String?
+}
+```
+
+```bash
+pnpm --filter "@snailycad/api" prisma migrate dev --name add_citizen_nickname
+```
+
+### Making a Field Required
+
+<Warning>
+  When making an optional field required, ensure existing records have values or provide a default.
+</Warning>
+
+```prisma
+model Citizen {
+  id          String   @id @default(cuid())
+  name        String
+  // Change from String? to String with default
+  nickname    String   @default("")
+}
+```
+
+### Adding a Relation
+
+```prisma
+model Citizen {
+  id          String   @id @default(cuid())
+  name        String
+  // Add relation
+  notes       Note[]
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  text        String
+  citizen     Citizen  @relation(fields: [citizenId], references: [id])
+  citizenId   String
+}
+```
+
+### Creating an Enum
+
+```prisma
+enum RecordType {
+  WRITTEN_WARNING
+  TICKET
+  ARREST_REPORT
+  WARRANT
+}
+
+model Record {
+  id          String      @id @default(cuid())
+  type        RecordType
+  // ...
+}
+```
+
+## Migration Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive migration names">
+    Good migration names:
+    - `add_citizen_middle_name`
+    - `create_custom_fields_table`
+    - `update_officer_callsign_template`
+    
+    Bad migration names:
+    - `update`
+    - `fix`
+    - `changes`
+  </Accordion>
+  
+  <Accordion title="Test migrations locally first">
+    Always test migrations in your local development environment before deploying:
+    
+    ```bash
+    # Reset database and reapply all migrations
+    pnpm --filter "@snailycad/api" prisma migrate reset
+    
+    # Verify the schema
+    pnpm --filter "@snailycad/api" prisma validate
+    ```
+  </Accordion>
+  
+  <Accordion title="Backup before production migrations">
+    Always backup your database before applying migrations in production:
+    
+    ```bash
+    # Docker backup
+    docker exec snaily-cad-postgres pg_dump -U postgres snaily-cad-v4 > backup.sql
+    
+    # Standalone backup
+    pg_dump -U postgres -d snaily-cad-v4 > backup.sql
+    ```
+    
+    See [Backup & Restore](/deployment/backup-restore) for more details.
+  </Accordion>
+  
+  <Accordion title="Don't modify existing migrations">
+    Never edit migration files that have been applied to production. Create a new migration instead:
+    
+    ```bash
+    # Don't edit: migrations/20231201_add_field/migration.sql
+    # Instead create: migrations/20231215_update_field/migration.sql
+    ```
+  </Accordion>
+  
+  <Accordion title="Handle data migrations carefully">
+    When migrations require data transformation, consider:
+    
+    1. Add new field as optional
+    2. Migrate data in application code
+    3. Make field required in a later migration
+    
+    Or use Prisma's `$executeRaw` for complex data migrations.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+### Migration Failed
+
+If a migration fails during `migrate deploy`:
+
+```bash
+# Check migration status
+pnpm --filter "@snailycad/api" prisma migrate status
+
+# Resolve the issue in the database manually
+# Then mark the migration as applied
+pnpm --filter "@snailycad/api" prisma migrate resolve --applied <migration_name>
+```
+
+### Schema Out of Sync
+
+If the database schema doesn't match the Prisma schema:
+
+```bash
+# Check for drift
+pnpm --filter "@snailycad/api" prisma migrate status
+
+# Reset database (development only!)
+pnpm --filter "@snailycad/api" prisma migrate reset
+```
+
+### Migration Lock
+
+If you see "Another migration is already running":
+
+1. Check if another process is running migrations
+2. If stuck, remove the lock manually:
+
+```sql
+-- Connect to database
+psql -U postgres -d snaily-cad-v4
+
+-- Clear migration lock
+DELETE FROM _prisma_migrations WHERE migration_name = '<stuck_migration>';
+```
+
+<Warning>
+  Only clear migration locks if you're certain no other process is running migrations.
+</Warning>
+
+### Rolling Back Migrations
+
+Prisma Migrate doesn't support automatic rollbacks. To rollback:
+
+1. Restore database from backup
+2. Or manually revert changes:
+
+```bash
+# Find the migration SQL
+cat apps/api/prisma/migrations/<timestamp>_migration/migration.sql
+
+# Write and execute reverse SQL
+psql -U postgres -d snaily-cad-v4 -c "ALTER TABLE Citizen DROP COLUMN middleName;"
+```
+
+## Migration Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `prisma migrate dev` | Create and apply migration in development |
+| `prisma migrate deploy` | Apply pending migrations in production |
+| `prisma migrate status` | Check migration status |
+| `prisma migrate reset` | Reset database and reapply all migrations |
+| `prisma migrate resolve --applied` | Mark migration as applied |
+| `prisma migrate resolve --rolled-back` | Mark migration as rolled back |
+| `prisma generate` | Regenerate Prisma Client |
+| `prisma validate` | Validate schema syntax |
+
+## Advanced Topics
+
+### Custom Migration SQL
+
+You can add custom SQL to generated migrations:
+
+```sql
+-- AlterTable (generated)
+ALTER TABLE "Citizen" ADD COLUMN "nickname" TEXT;
+
+-- Custom data migration
+UPDATE "Citizen" SET "nickname" = "name" WHERE "nickname" IS NULL;
+```
+
+### Baseline Existing Database
+
+If you're adopting Prisma Migrate on an existing database:
+
+```bash
+# Create baseline migration without applying
+pnpm --filter "@snailycad/api" prisma migrate diff \
+  --from-empty \
+  --to-schema-datamodel prisma/schema.prisma \
+  --script > prisma/migrations/0_baseline/migration.sql
+
+# Mark as applied
+pnpm --filter "@snailycad/api" prisma migrate resolve --applied 0_baseline
+```
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Database Schema" icon="database" href="/developer/database-schema">
+    Explore the database structure
+  </Card>
+  <Card title="Backup & Restore" icon="floppy-disk" href="/deployment/backup-restore">
+    Database backup procedures
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/deployment/troubleshooting">
+    Common deployment issues
+  </Card>
+  <Card title="Prisma Docs" icon="book" href="https://www.prisma.io/docs/concepts/components/prisma-migrate">
+    Official Prisma Migrate docs
+  </Card>
+</CardGroup>

@@ -1,0 +1,383 @@
+---
+title: FiveM Integration
+description: Connect your FiveM server to SnailyCAD for real-time player tracking and in-game commands
+---
+
+SnailyCAD can integrate with FiveM servers to provide real-time player tracking on the live map, automated lookups, and in-game commands.
+
+## Overview
+
+The FiveM integration enables:
+
+- Real-time player position tracking on the live map
+- Automatic identification of players by Steam ID or Discord ID
+- In-game commands for creating calls, checking plates/names
+- Vehicle and player synchronization
+- Integration with CAD dispatch interface
+
+## Prerequisites
+
+- FiveM server with admin access
+- SnailyCAD instance running and accessible from your FiveM server
+- Basic knowledge of FiveM resource installation
+
+## Installation
+
+<Info>
+  The official FiveM integration resource is maintained separately from the main SnailyCAD repository. Check the [SnailyCAD GitHub organization](https://github.com/SnailyCAD) for the latest FiveM resource.
+</Info>
+
+<Steps>
+  <Step title="Download FiveM Resource">
+    Download the SnailyCAD FiveM resource from the official repository:
+    
+    ```bash
+    git clone https://github.com/SnailyCAD/fivem-integration.git
+    ```
+    
+    Or download the latest release ZIP file.
+  </Step>
+
+  <Step title="Install Resource">
+    1. Extract/copy the resource to your FiveM server's `resources` folder
+    2. Rename the folder to `snailycad` (or your preferred name)
+    3. The structure should be: `resources/snailycad/fxmanifest.lua`
+  </Step>
+
+  <Step title="Configure Resource">
+    Edit the `config.lua` file in the resource:
+    
+    ```lua
+    Config = {}
+    
+    -- Your SnailyCAD API URL
+    Config.apiUrl = "https://your-cad-domain.com/api/v1"
+    
+    -- Enable/disable features
+    Config.liveMap = true
+    Config.inGameCommands = true
+    Config.automaticLookups = true
+    
+    -- Update intervals (in milliseconds)
+    Config.updateInterval = 500  -- How often to send player positions
+    Config.playerDataInterval = 5000  -- How often to update player data
+    }
+    ```
+  </Step>
+
+  <Step title="Add to server.cfg">
+    Add the resource to your `server.cfg`:
+    
+    ```cfg
+    ensure snailycad
+    ```
+  </Step>
+
+  <Step title="Restart Server">
+    Restart your FiveM server or start the resource:
+    
+    ```
+    restart snailycad
+    ```
+  </Step>
+</Steps>
+
+## Player Identification
+
+Players are identified and linked to CAD accounts using:
+
+1. **Steam ID**: Automatically converted from hex format
+2. **Discord ID**: If player is in your Discord server
+
+### Linking Players to CAD Accounts
+
+For automatic role assignment and permissions:
+
+<Steps>
+  <Step title="Link Discord Account">
+    Users should link their Discord account in SnailyCAD:
+    1. Log into SnailyCAD
+    2. Go to **Account Settings**
+    3. Click **Link Discord Account**
+  </Step>
+
+  <Step title="Link Steam Account">
+    Users can add their Steam ID to their SnailyCAD profile:
+    1. Go to **Account Settings**
+    2. Enter Steam ID (will be validated against in-game identifier)
+  </Step>
+</Steps>
+
+## Live Map Configuration
+
+The live map allows dispatchers to see player positions in real-time.
+
+### Server-Side Setup
+
+<Steps>
+  <Step title="Enable Live Map in Resource">
+    In `config.lua`, ensure:
+    
+    ```lua
+    Config.liveMap = true
+    Config.updateInterval = 500  -- Update every 500ms
+    ```
+  </Step>
+
+  <Step title="Configure Map Server URL">
+    The resource will send player data to your CAD's live map endpoint automatically based on the `Config.apiUrl` setting.
+  </Step>
+</Steps>
+
+### CAD-Side Setup
+
+<Steps>
+  <Step title="Configure Live Map URL">
+    In SnailyCAD admin panel:
+    1. Go to **Admin** > **Manage** > **CAD Settings** > **Live Map**
+    2. Click **Add URL**
+    3. Enter:
+       - **Name**: Your server name (e.g., "Main Server")
+       - **URL**: Your FiveM server's socket URL (e.g., `http://your-fivem-ip:30120`)
+    4. Click **Save**
+  </Step>
+
+  <Step title="Test Connection">
+    1. Navigate to **Dispatch** > **Live Map**
+    2. Select your server from the dropdown
+    3. Verify players appear on the map
+  </Step>
+</Steps>
+
+### Multiple Servers
+
+You can configure multiple FiveM servers:
+
+1. Install the resource on each FiveM server
+2. Add each server URL in Live Map settings
+3. Dispatchers can switch between servers using the dropdown
+
+## In-Game Commands
+
+The FiveM resource can provide in-game commands for players and officers.
+
+### Available Commands
+
+```lua
+-- Create a 911 call
+/911 [description] [postal/location]
+
+-- Check vehicle plate
+/plate [plate_number]
+
+-- Check person by name
+/name [first_name] [last_name]
+
+-- Check weapon serial
+/weapon [serial_number]
+
+-- Set panic button (LEO/EMS only)
+/panic
+
+-- Update status (LEO/EMS only)
+/status [status_code]
+```
+
+### Configuring Commands
+
+In `config.lua`:
+
+```lua
+Config.commands = {
+    call911 = "911",
+    plate = "plate",
+    name = "name",
+    weapon = "weapon",
+    panic = "panic",
+    status = "status"
+}
+
+-- Restrict commands to specific ACE permissions
+Config.restrictCommands = true
+Config.leoPermission = "snailycad.leo"
+Config.emsPermission = "snailycad.ems"
+```
+
+### Setting Permissions
+
+In your `server.cfg`:
+
+```cfg
+# Grant LEO permissions to specific players
+add_ace group.leo snailycad.leo allow
+add_principal identifier.steam:110000XXXXXXXX group.leo
+
+# Grant EMS permissions
+add_ace group.ems snailycad.ems allow
+add_principal identifier.steam:110000YYYYYYYY group.ems
+```
+
+## Automatic Lookups
+
+When enabled, the resource can automatically perform lookups when players:
+
+- Enter a vehicle (plate lookup)
+- Get arrested (name lookup)
+- Are searched by police (name lookup)
+
+```lua
+Config.automaticLookups = true
+Config.autoPlateOnVehicleEnter = true
+Config.autoNameOnArrest = true
+```
+
+## Vehicle Synchronization
+
+Sync vehicle information between FiveM and SnailyCAD:
+
+```lua
+Config.syncVehicles = true
+Config.syncInterval = 10000  -- Sync every 10 seconds
+```
+
+This allows:
+- Real-time vehicle tracking
+- Automatic plate registration
+- Vehicle status updates (stolen, impounded, etc.)
+
+## Webhooks from FiveM
+
+The resource can send webhooks for events:
+
+```lua
+Config.webhooks = {
+    playerConnect = true,
+    playerDisconnect = true,
+    vehicleSpawn = true,
+    vehicleDelete = true
+}
+```
+
+Configure webhook URLs in SnailyCAD's [Webhook settings](/integrations/webhooks).
+
+## Troubleshooting
+
+### Players Not Appearing on Map
+
+1. **Check Resource Status**: Ensure resource is running (`restart snailycad`)
+2. **Verify API URL**: Check `Config.apiUrl` is correct and accessible
+3. **Check Firewall**: Ensure FiveM server can reach SnailyCAD API
+4. **Review Console**: Look for errors in FiveM server console
+5. **Test Connection**: Use `curl` from FiveM server to test API connectivity:
+   ```bash
+   curl https://your-cad-domain.com/api/v1/health
+   ```
+
+### Players Not Linked to Accounts
+
+1. Verify player has Steam or Discord linked in SnailyCAD
+2. Check that identifiers are being sent (check console output)
+3. Ensure Discord bot is in the same server as players
+4. Verify Steam ID format is correct
+
+### Commands Not Working
+
+1. Check `Config.inGameCommands = true`
+2. Verify player has required ACE permissions
+3. Check command syntax is correct
+4. Review server console for errors
+
+### Connection Errors
+
+**CORS Errors**
+- Ensure `CORS_ORIGIN_URL` includes your FiveM server IP
+- Check that API is accessible from FiveM server
+
+**SSL/HTTPS Errors**
+- If using HTTPS, ensure valid SSL certificate
+- For development, you may need to allow self-signed certificates
+
+**Timeout Errors**
+- Check network connectivity between servers
+- Verify firewall rules allow communication
+- Increase timeout values in config if needed
+
+## Performance Optimization
+
+### Reduce Update Frequency
+
+```lua
+-- Lower frequency for better performance
+Config.updateInterval = 1000  -- 1 second instead of 500ms
+Config.playerDataInterval = 10000  -- 10 seconds
+```
+
+### Limit Data Sent
+
+```lua
+-- Only send essential data
+Config.sendVehicleData = false  -- Disable if not needed
+Config.sendWeaponData = false   -- Disable if not needed
+```
+
+### Optimize for Many Players
+
+```lua
+-- Batch updates for servers with 100+ players
+Config.batchUpdates = true
+Config.batchSize = 50  -- Send 50 players per update
+```
+
+## Security Considerations
+
+<Warning>
+  - Never expose your API tokens in client-side code
+  - Use server-side only for sensitive operations
+  - Implement rate limiting on your SnailyCAD API
+  - Validate all input from FiveM before processing
+</Warning>
+
+### API Authentication
+
+For production deployments, consider using API tokens:
+
+```lua
+Config.apiToken = "your_secure_api_token"
+```
+
+Configure this in SnailyCAD's API settings.
+
+## Example Workflows
+
+### Traffic Stop Workflow
+
+1. Officer initiates traffic stop in FiveM
+2. Uses `/plate ABC123` to check vehicle registration
+3. Results appear in-game and in CAD
+4. Dispatcher sees officer's location on live map
+5. Officer can create citations/warnings in CAD
+6. Updates sync back to FiveM
+
+### Emergency Call Workflow
+
+1. Player uses `/911 Armed robbery at Legion Square`
+2. Call is created in SnailyCAD dispatch
+3. Discord webhook notifies on-duty officers
+4. Dispatcher assigns units to the call
+5. Officers see call details and location
+6. Live map shows responding units' positions
+
+## Best Practices
+
+1. **Test in Development**: Set up a test server before production deployment
+2. **Monitor Performance**: Watch for performance impact on your FiveM server
+3. **Regular Updates**: Keep the integration resource updated
+4. **Backup Configuration**: Save your config files before updates
+5. **Document Permissions**: Maintain a list of who has which permissions
+6. **Rate Limiting**: Don't set update intervals too low (causes unnecessary load)
+
+## Related Documentation
+
+- [Live Map](/integrations/live-map) - Configure live map tiles and settings
+- [Webhooks](/integrations/webhooks) - Set up event notifications
+- [Permissions](/configuration/permissions) - Manage user access control

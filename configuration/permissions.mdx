@@ -1,0 +1,691 @@
+---
+title: Permissions System
+description: Understanding and configuring the SnailyCAD permissions system
+---
+
+SnailyCAD uses a comprehensive permissions system to control user access to various features and actions. Permissions can be assigned to individual users or granted through custom roles.
+
+## User Ranks
+
+There are three primary user ranks:
+
+<CardGroup cols={3}>
+  <Card title="USER" icon="user">
+    Standard user with permissions determined by assigned permissions and roles.
+  </Card>
+  <Card title="ADMIN" icon="user-shield">
+    Administrative user with elevated permissions based on assigned permissions.
+  </Card>
+  <Card title="OWNER" icon="crown">
+    Full access to all features and settings. Cannot be restricted.
+  </Card>
+</CardGroup>
+
+<Note>
+  OWNER rank users automatically bypass all permission checks and have full access to the CAD.
+</Note>
+
+## How Permissions Work
+
+Permissions are evaluated based on:
+
+1. **User rank** - OWNER users have all permissions
+2. **Direct user permissions** - Permissions assigned directly to the user
+3. **Role permissions** - Permissions granted through assigned custom roles
+
+A user has a permission if:
+- They are an OWNER, OR
+- The permission is in their direct permissions, OR
+- The permission is in any of their assigned roles
+
+## Permission Categories
+
+### Law Enforcement (LEO)
+
+Permissions related to law enforcement activities.
+
+<AccordionGroup>
+  <Accordion title="Basic LEO Permissions">
+    <ParamField path="Leo" type="boolean">
+      Access to law enforcement features and the LEO dashboard.
+    </ParamField>
+    
+    <ParamField path="ViewIncidents" type="boolean">
+      View LEO incidents and reports.
+    </ParamField>
+    
+    <ParamField path="ManageIncidents" type="boolean">
+      Create, edit, and manage LEO incidents.
+    </ParamField>
+    
+    <ParamField path="PurgeLeoIncidents" type="boolean">
+      Permanently delete LEO incidents.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Facilities Management">
+    <ParamField path="ViewImpoundLot" type="boolean">
+      View impounded vehicles.
+    </ParamField>
+    
+    <ParamField path="ManageImpoundLot" type="boolean">
+      Impound and release vehicles.
+    </ParamField>
+    
+    <ParamField path="ViewJail" type="boolean">
+      View jailed citizens.
+    </ParamField>
+    
+    <ParamField path="ManageJail" type="boolean">
+      Arrest and release citizens from jail.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Records and Licenses">
+    <ParamField path="ViewCitizenLogs" type="boolean">
+      View citizen activity logs.
+    </ParamField>
+    
+    <ParamField path="DeleteCitizenRecords" type="boolean">
+      Delete records from citizen profiles (arrests, tickets, warnings).
+    </ParamField>
+    
+    <ParamField path="ViewLicenseExams" type="boolean">
+      View license examination requests.
+    </ParamField>
+    
+    <ParamField path="ManageLicenseExams" type="boolean">
+      Approve or deny license examination requests.
+    </ParamField>
+    
+    <ParamField path="ManageDMV" type="boolean">
+      Manage DMV operations and vehicle registrations.
+    </ParamField>
+    
+    <ParamField path="ManageBureauOfFirearms" type="boolean">
+      Manage weapon registrations and firearm licenses.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Warrants and Legal">
+    <ParamField path="ManageWarrants" type="boolean">
+      Create and manage warrants.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Other LEO Features">
+    <ParamField path="ViewCallHistory" type="boolean">
+      View call history.
+    </ParamField>
+    
+    <ParamField path="ManageCallHistory" type="boolean">
+      Edit and manage call history.
+    </ParamField>
+    
+    <ParamField path="LiveMap" type="boolean">
+      Access to the live map feature.
+    </ParamField>
+    
+    <ParamField path="SetUserDefinedCallsignOnOfficer" type="boolean">
+      Set custom callsigns for officers.
+    </ParamField>
+    
+    <ParamField path="ManageAwardsAndQualifications" type="boolean">
+      Assign awards and qualifications to officers.
+    </ParamField>
+    
+    <ParamField path="LeoManageCustomFields" type="boolean">
+      Manage custom fields in LEO context.
+    </ParamField>
+    
+    <ParamField path="LeoManageCitizenProfile" type="boolean">
+      Edit citizen profiles from LEO interface.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### Dispatch
+
+Permissions for dispatch operations.
+
+<ParamField path="Dispatch" type="boolean">
+  Access to dispatch features and the dispatch dashboard.
+</ParamField>
+
+<ParamField path="ManageSmartSigns" type="boolean">
+  Control smart traffic signs.
+</ParamField>
+
+<ParamField path="ManageSmartMotorwaySigns" type="boolean">
+  Control smart motorway signs.
+</ParamField>
+
+### EMS/Fire Department
+
+Permissions for emergency medical services and fire department.
+
+<AccordionGroup>
+  <Accordion title="Basic EMS-FD Permissions">
+    <ParamField path="EmsFd" type="boolean">
+      Access to EMS/FD features and dashboard.
+    </ParamField>
+    
+    <ParamField path="ViewEmsFdIncidents" type="boolean">
+      View EMS/FD incidents.
+    </ParamField>
+    
+    <ParamField path="ManageEmsFdIncidents" type="boolean">
+      Create and manage EMS/FD incidents.
+    </ParamField>
+    
+    <ParamField path="PurgeEmsFdIncidents" type="boolean">
+      Permanently delete EMS/FD incidents.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Medical Operations">
+    <ParamField path="DeclareCitizenDead" type="boolean">
+      Declare citizens as deceased.
+    </ParamField>
+    
+    <ParamField path="ViewDeadCitizens" type="boolean">
+      View deceased citizens list.
+    </ParamField>
+    
+    <ParamField path="ManageDeadCitizens" type="boolean">
+      Manage deceased citizens records.
+    </ParamField>
+    
+    <ParamField path="SetUserDefinedCallsignOnEmsFd" type="boolean">
+      Set custom callsigns for EMS/FD units.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### Citizen Services
+
+Permissions for civilian business operations.
+
+<AccordionGroup>
+  <Accordion title="Taxi Services">
+    <ParamField path="ViewTaxiCalls" type="boolean">
+      View taxi service calls.
+    </ParamField>
+    
+    <ParamField path="ManageTaxiCalls" type="boolean">
+      Accept and manage taxi calls.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Tow Services">
+    <ParamField path="ViewTowCalls" type="boolean">
+      View tow service calls.
+    </ParamField>
+    
+    <ParamField path="ManageTowCalls" type="boolean">
+      Accept and manage tow calls.
+    </ParamField>
+    
+    <ParamField path="ViewTowLogs" type="boolean">
+      View tow service logs.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Businesses">
+    <ParamField path="CreateBusinesses" type="boolean">
+      Create new businesses.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### Administrative Permissions
+
+Permissions for CAD administration and management.
+
+<AccordionGroup>
+  <Accordion title="CAD Settings">
+    <ParamField path="ManageCADSettings" type="boolean">
+      Access and modify CAD settings, features, and configuration.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="User Management">
+    <ParamField path="ViewUsers" type="boolean">
+      View user list and details.
+    </ParamField>
+    
+    <ParamField path="ManageUsers" type="boolean">
+      Edit user information and permissions.
+    </ParamField>
+    
+    <ParamField path="BanUsers" type="boolean">
+      Ban and unban users.
+    </ParamField>
+    
+    <ParamField path="DeleteUsers" type="boolean">
+      Permanently delete users.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Citizen Management">
+    <ParamField path="ViewCitizens" type="boolean">
+      View all citizens in the system.
+    </ParamField>
+    
+    <ParamField path="ManageCitizens" type="boolean">
+      Edit citizen information.
+    </ParamField>
+    
+    <ParamField path="DeleteCitizens" type="boolean">
+      Delete citizens.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Unit Management">
+    <ParamField path="ViewUnits" type="boolean">
+      View all LEO and EMS/FD units.
+    </ParamField>
+    
+    <ParamField path="ManageUnits" type="boolean">
+      Edit unit information.
+    </ParamField>
+    
+    <ParamField path="DeleteUnits" type="boolean">
+      Delete units.
+    </ParamField>
+    
+    <ParamField path="ManageUnitCallsigns" type="boolean">
+      Manage unit callsigns.
+    </ParamField>
+    
+    <ParamField path="ManageUnitRank" type="boolean">
+      Manage unit ranks.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Business Management">
+    <ParamField path="ViewBusinesses" type="boolean">
+      View all businesses.
+    </ParamField>
+    
+    <ParamField path="ManageBusinesses" type="boolean">
+      Edit business information and approve/deny business applications.
+    </ParamField>
+    
+    <ParamField path="DeleteBusinesses" type="boolean">
+      Delete businesses.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Request Management">
+    <ParamField path="ViewExpungementRequests" type="boolean">
+      View expungement requests.
+    </ParamField>
+    
+    <ParamField path="ManageExpungementRequests" type="boolean">
+      Approve or deny expungement requests.
+    </ParamField>
+    
+    <ParamField path="ViewNameChangeRequests" type="boolean">
+      View name change requests.
+    </ParamField>
+    
+    <ParamField path="ManageNameChangeRequests" type="boolean">
+      Approve or deny name change requests.
+    </ParamField>
+    
+    <ParamField path="ManagePendingWarrants" type="boolean">
+      Approve or deny pending warrant requests.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Courthouse">
+    <ParamField path="ManageCourthousePosts" type="boolean">
+      Manage courthouse posts and announcements.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Custom Features">
+    <ParamField path="ViewCustomFields" type="boolean">
+      View custom fields configuration.
+    </ParamField>
+    
+    <ParamField path="ManageCustomFields" type="boolean">
+      Create and edit custom fields.
+    </ParamField>
+    
+    <ParamField path="ViewCustomRoles" type="boolean">
+      View custom roles.
+    </ParamField>
+    
+    <ParamField path="ManageCustomRoles" type="boolean">
+      Create and edit custom roles.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Import/Export">
+    <ParamField path="ImportCitizens" type="boolean">
+      Import citizens from external sources.
+    </ParamField>
+    
+    <ParamField path="ImportRegisteredVehicles" type="boolean">
+      Import vehicle registrations.
+    </ParamField>
+    
+    <ParamField path="ImportRegisteredWeapons" type="boolean">
+      Import weapon registrations.
+    </ParamField>
+    
+    <ParamField path="DeleteRegisteredVehicles" type="boolean">
+      Delete vehicle registrations in bulk.
+    </ParamField>
+    
+    <ParamField path="DeleteRegisteredWeapons" type="boolean">
+      Delete weapon registrations in bulk.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### Value Management
+
+Permissions for managing various value types in the CAD.
+
+<AccordionGroup>
+  <Accordion title="All Value Permissions">
+    <ParamField path="ManageValueLicense" type="boolean">
+      Manage license types and categories.
+    </ParamField>
+    
+    <ParamField path="ManageValueGender" type="boolean">
+      Manage gender values.
+    </ParamField>
+    
+    <ParamField path="ManageValueEthnicity" type="boolean">
+      Manage ethnicity values.
+    </ParamField>
+    
+    <ParamField path="ManageValueVehicle" type="boolean">
+      Manage vehicle makes, models, and related values.
+    </ParamField>
+    
+    <ParamField path="ManageValueWeapon" type="boolean">
+      Manage weapon types and related values.
+    </ParamField>
+    
+    <ParamField path="ManageValueBloodGroup" type="boolean">
+      Manage blood group values.
+    </ParamField>
+    
+    <ParamField path="ManageValueBusinessRole" type="boolean">
+      Manage business role types.
+    </ParamField>
+    
+    <ParamField path="ManageValueCodes10" type="boolean">
+      Manage 10-codes.
+    </ParamField>
+    
+    <ParamField path="ManageValuePenalCode" type="boolean">
+      Manage penal codes.
+    </ParamField>
+    
+    <ParamField path="ManageValueDepartment" type="boolean">
+      Manage departments.
+    </ParamField>
+    
+    <ParamField path="ManageValueOfficerRank" type="boolean">
+      Manage officer ranks.
+    </ParamField>
+    
+    <ParamField path="ManageValueDivision" type="boolean">
+      Manage divisions.
+    </ParamField>
+    
+    <ParamField path="ManageValueDLCategory" type="boolean">
+      Manage driver's license categories.
+    </ParamField>
+    
+    <ParamField path="ManageValueImpoundLot" type="boolean">
+      Manage impound lot locations.
+    </ParamField>
+    
+    <ParamField path="ManageValueVehicleFlag" type="boolean">
+      Manage vehicle flag types.
+    </ParamField>
+    
+    <ParamField path="ManageValueCitizenFlag" type="boolean">
+      Manage citizen flag types.
+    </ParamField>
+    
+    <ParamField path="ManageValueQualification" type="boolean">
+      Manage qualification types.
+    </ParamField>
+    
+    <ParamField path="ManageValueCallType" type="boolean">
+      Manage 911 call types.
+    </ParamField>
+    
+    <ParamField path="ManageValueAddress" type="boolean">
+      Manage address values.
+    </ParamField>
+    
+    <ParamField path="ManageValueEmergencyVehicle" type="boolean">
+      Manage emergency vehicle types.
+    </ParamField>
+    
+    <ParamField path="ManageValueAddressFlag" type="boolean">
+      Manage address flag types.
+    </ParamField>
+    
+    <ParamField path="ManageValueVehicleTrimLevel" type="boolean">
+      Manage vehicle trim levels.
+    </ParamField>
+    
+    <ParamField path="ManageValueWeaponFlag" type="boolean">
+      Manage weapon flag types.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+## Default Permission Sets
+
+SnailyCAD provides default permission sets for common roles:
+
+### Law Enforcement Default Permissions
+
+```javascript
+[
+  "Leo",
+  "ViewIncidents",
+  "ManageIncidents",
+  "ViewImpoundLot",
+  "ManageImpoundLot",
+  "ViewJail",
+  "ManageJail",
+  "ViewCallHistory",
+  "ManageCallHistory",
+  "ViewLicenseExams",
+  "ManageLicenseExams",
+  "ManageDMV",
+  "ManageBureauOfFirearms",
+  "DeleteCitizenRecords",
+  "ViewCitizenLogs",
+  "ManageWarrants",
+  "ManageAwardsAndQualifications",
+  "LeoManageCustomFields",
+  "LeoManageCitizenProfile"
+]
+```
+
+### Dispatch Default Permissions
+
+```javascript
+[
+  "Dispatch",
+  "LiveMap"
+]
+```
+
+### EMS/FD Default Permissions
+
+```javascript
+[
+  "EmsFd",
+  "DeclareCitizenDead",
+  "ViewEmsFdIncidents",
+  "ManageEmsFdIncidents",
+  "ViewDeadCitizens",
+  "ManageDeadCitizens"
+]
+```
+
+### Tow Default Permissions
+
+```javascript
+[
+  "ViewTowCalls",
+  "ManageTowCalls",
+  "ViewTowLogs",
+  "CreateBusinesses"
+]
+```
+
+### Taxi Default Permissions
+
+```javascript
+[
+  "ViewTaxiCalls",
+  "ManageTaxiCalls"
+]
+```
+
+### Admin Default Permissions
+
+```javascript
+[
+  // Management
+  "ViewUsers",
+  "ManageUsers",
+  "BanUsers",
+  "DeleteUsers",
+  "ViewCitizens",
+  "ManageCitizens",
+  "DeleteCitizens",
+  "ViewUnits",
+  "ManageUnits",
+  "DeleteUnits",
+  "ManageUnitCallsigns",
+  "ManageAwardsAndQualifications",
+  "ViewBusinesses",
+  "ManageBusinesses",
+  "DeleteBusinesses",
+  "ViewExpungementRequests",
+  "ManageExpungementRequests",
+  "ViewNameChangeRequests",
+  "ManageNameChangeRequests",
+  "ViewCustomFields",
+  "ManageCustomFields",
+  "ManageCustomRoles",
+  "ViewCustomRoles",
+  "ManageUnitRank",
+  
+  // Import
+  "ImportCitizens",
+  "ImportRegisteredVehicles",
+  "ImportRegisteredWeapons",
+  
+  // All Value Management permissions
+  "ManageValueLicense",
+  "ManageValueGender",
+  "ManageValueEthnicity",
+  "ManageValueVehicle",
+  "ManageValueWeapon",
+  "ManageValueBloodGroup",
+  "ManageValueBusinessRole",
+  "ManageValueCodes10",
+  "ManageValuePenalCode",
+  "ManageValueDepartment",
+  "ManageValueOfficerRank",
+  "ManageValueDivision",
+  "ManageValueDLCategory",
+  "ManageValueImpoundLot",
+  "ManageValueVehicleFlag",
+  "ManageValueCitizenFlag",
+  "ManageValueQualification",
+  "ManageValueCallType",
+  "ManageValueAddress",
+  "ManageValueEmergencyVehicle",
+  "ManageValueAddressFlag",
+  "ManageValueVehicleTrimLevel"
+]
+```
+
+### Courthouse Default Permissions
+
+```javascript
+[
+  "ViewExpungementRequests",
+  "ManageExpungementRequests",
+  "ViewNameChangeRequests",
+  "ManageNameChangeRequests",
+  "ManagePendingWarrants",
+  "ManageCourthousePosts"
+]
+```
+
+## Managing Permissions
+
+### Assigning Permissions to Users
+
+1. Navigate to **Admin** > **User Management**
+2. Click on a user to edit
+3. Select permissions from the available list
+4. Save changes
+
+### Creating Custom Roles
+
+1. Navigate to **Admin** > **Custom Roles**
+2. Click **Create Role**
+3. Name the role and select permissions
+4. Save the role
+5. Assign the role to users
+
+### Discord Role Integration
+
+Permissions can be automatically granted based on Discord roles:
+
+1. Configure Discord integration (see [Discord Integration](/integrations/discord))
+2. Map Discord roles to SnailyCAD permissions
+3. Users with matching Discord roles automatically receive the configured permissions
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Custom Roles" icon="users">
+    Group related permissions into custom roles for easier management.
+  </Card>
+  <Card title="Principle of Least Privilege" icon="shield-check">
+    Only grant permissions that users need for their role.
+  </Card>
+  <Card title="Regular Audits" icon="magnifying-glass">
+    Periodically review user permissions to ensure they're still appropriate.
+  </Card>
+  <Card title="Document Changes" icon="file-lines">
+    Keep track of permission changes using the audit log.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### User Can't Access a Feature
+
+1. Check the user's rank (OWNER has all permissions)
+2. Verify the user has the required permission directly assigned
+3. Check if any of the user's roles include the permission
+4. Review audit logs for recent permission changes
+
+### Permission Not Taking Effect
+
+1. Have the user log out and log back in
+2. Verify the permission name matches exactly (case-sensitive)
+3. Check for conflicting CAD feature settings
+4. Review Discord role mappings if using Discord integration

@@ -1,0 +1,349 @@
+---
+title: Authentication
+description: Authentication and user management endpoints
+---
+
+## Overview
+
+The Authentication API provides endpoints for user login, registration, 2FA management, and session handling. All authenticated endpoints require a valid JWT token set via cookies.
+
+## Authentication Flow
+
+SnailyCAD uses JWT-based authentication with access and refresh tokens stored in HTTP-only cookies:
+- `snaily-cad-access-token` - Short-lived access token
+- `snaily-cad-refresh-token` - Long-lived refresh token
+
+---
+
+## Login
+
+<CodeGroup>
+```bash POST /api/auth/login
+curl -X POST https://your-cad.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "password": "your-password",
+    "totpCode": "123456"
+  }'
+```
+</CodeGroup>
+
+Authenticate a user via username and password. Returns user ID and sets authentication cookies.
+
+### Request Body
+
+<ParamField body="username" type="string" required>
+  The user's username (case-insensitive)
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The user's password
+</ParamField>
+
+<ParamField body="totpCode" type="string">
+  Two-factor authentication code (required if 2FA is enabled)
+</ParamField>
+
+### Response
+
+<ResponseField name="userId" type="string">
+  The authenticated user's ID
+</ResponseField>
+
+<ResponseField name="hasTempPassword" type="boolean">
+  Indicates if the user needs to change their temporary password
+</ResponseField>
+
+### Error Responses
+
+- `404` - User not found
+- `400` - Invalid credentials, whitelist pending/declined, or user banned
+- `400` - 2FA code required or invalid
+
+---
+
+## Register
+
+<CodeGroup>
+```bash POST /api/auth/register
+curl -X POST https://your-cad.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "password": "secure-password",
+    "registrationCode": "optional-code"
+  }'
+```
+</CodeGroup>
+
+Create a new user account. The first registered user automatically becomes the CAD owner.
+
+### Request Body
+
+<ParamField body="username" type="string" required>
+  Username (alphanumeric, underscores, and periods only)
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Password (minimum 8 characters)
+</ParamField>
+
+<ParamField body="registrationCode" type="string">
+  Registration code if required by the CAD
+</ParamField>
+
+<ParamField body="steamId" type="string">
+  Steam ID for linking Steam account
+</ParamField>
+
+<ParamField body="discordId" type="string">
+  Discord ID for linking Discord account
+</ParamField>
+
+### Response
+
+<ResponseField name="userId" type="string">
+  The newly created user's ID
+</ResponseField>
+
+<ResponseField name="isOwner" type="boolean">
+  Whether the user is the CAD owner
+</ResponseField>
+
+<ResponseField name="whitelistStatus" type="string">
+  User's whitelist status: `ACCEPTED`, `PENDING`, or `DECLINED`
+</ResponseField>
+
+---
+
+## Get Current User
+
+<CodeGroup>
+```bash POST /api/user
+curl -X POST https://your-cad.com/api/user \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json"
+```
+</CodeGroup>
+
+Get the authenticated user's information and CAD settings.
+
+### Query Parameters
+
+<ParamField query="includeActiveUnit" type="boolean">
+  Include the user's currently active LEO/EMS-FD unit
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  User ID
+</ResponseField>
+
+<ResponseField name="username" type="string">
+  Username
+</ResponseField>
+
+<ResponseField name="rank" type="string">
+  User rank: `OWNER`, `ADMIN`, `USER`, etc.
+</ResponseField>
+
+<ResponseField name="permissions" type="array">
+  Array of permission strings
+</ResponseField>
+
+<ResponseField name="cad" type="object">
+  CAD configuration and settings
+</ResponseField>
+
+<ResponseField name="unit" type="object">
+  Active officer or deputy (if `includeActiveUnit=true`)
+</ResponseField>
+
+---
+
+## Update User Settings
+
+<CodeGroup>
+```bash PATCH /api/user
+curl -X PATCH https://your-cad.com/api/user \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "new_username",
+    "isDarkTheme": true,
+    "locale": "en"
+  }'
+```
+</CodeGroup>
+
+Update the authenticated user's settings and preferences.
+
+### Request Body
+
+<ParamField body="username" type="string">
+  New username
+</ParamField>
+
+<ParamField body="isDarkTheme" type="boolean">
+  Enable dark theme
+</ParamField>
+
+<ParamField body="locale" type="string">
+  Preferred language locale (e.g., `en`, `de`, `fr`)
+</ParamField>
+
+<ParamField body="statusViewMode" type="string">
+  Status view mode preference
+</ParamField>
+
+<ParamField body="tableActionsAlignment" type="string">
+  Table actions alignment preference
+</ParamField>
+
+<ParamField body="soundSettings" type="object">
+  Sound notification settings
+</ParamField>
+
+---
+
+## Logout
+
+<CodeGroup>
+```bash POST /api/user/logout
+curl -X POST https://your-cad.com/api/user/logout \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Logout the authenticated user, clearing all sessions and setting active units off-duty.
+
+### Response
+
+Returns `true` on success.
+
+---
+
+## Change Password
+
+<CodeGroup>
+```bash POST /api/user/password
+curl -X POST https://your-cad.com/api/user/password \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPassword": "old-password",
+    "newPassword": "new-password",
+    "confirmPassword": "new-password"
+  }'
+```
+</CodeGroup>
+
+Update the user's password.
+
+### Request Body
+
+<ParamField body="currentPassword" type="string" required>
+  Current password (not required for OAuth users)
+</ParamField>
+
+<ParamField body="newPassword" type="string" required>
+  New password (minimum 8 characters)
+</ParamField>
+
+<ParamField body="confirmPassword" type="string" required>
+  Confirmation of new password (must match)
+</ParamField>
+
+---
+
+## Two-Factor Authentication
+
+### Enable 2FA
+
+<CodeGroup>
+```bash POST /api/2fa/enable
+curl -X POST https://your-cad.com/api/2fa/enable \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"currentPassword": "your-password"}'
+```
+</CodeGroup>
+
+Enable two-factor authentication for the user.
+
+#### Request Body
+
+<ParamField body="currentPassword" type="string" required>
+  User's current password for verification
+</ParamField>
+
+#### Response
+
+<ResponseField name="qrCode" type="string">
+  Data URI of QR code for authenticator apps
+</ResponseField>
+
+<ResponseField name="totpCode" type="string">
+  Secret key for manual entry
+</ResponseField>
+
+### Verify 2FA Code
+
+<CodeGroup>
+```bash POST /api/2fa/verify
+curl -X POST https://your-cad.com/api/2fa/verify \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"totpCode": "123456"}'
+```
+</CodeGroup>
+
+Verify a TOTP code.
+
+#### Request Body
+
+<ParamField body="totpCode" type="string" required>
+  6-digit code from authenticator app
+</ParamField>
+
+### Disable 2FA
+
+<CodeGroup>
+```bash DELETE /api/2fa
+curl -X DELETE https://your-cad.com/api/2fa \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"currentPassword": "your-password"}'
+```
+</CodeGroup>
+
+Disable two-factor authentication.
+
+#### Request Body
+
+<ParamField body="currentPassword" type="string" required>
+  User's current password for verification
+</ParamField>
+
+---
+
+## Delete Account
+
+<CodeGroup>
+```bash DELETE /api/user
+curl -X DELETE https://your-cad.com/api/user \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Permanently delete the user's account. CAD owners cannot delete their accounts.
+
+### Response
+
+Returns `true` on success.
+
+### Error Responses
+
+- `400` - Cannot delete owner account

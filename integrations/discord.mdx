@@ -1,0 +1,288 @@
+---
+title: Discord Integration
+description: Set up Discord bot and authentication integration for SnailyCAD
+---
+
+SnailyCAD offers comprehensive Discord integration including bot functionality, role synchronization, webhooks, and Discord-based authentication.
+
+## Overview
+
+The Discord integration provides:
+
+- **Discord Authentication**: Allow users to log in with Discord OAuth2
+- **Role Synchronization**: Automatically assign CAD permissions based on Discord roles
+- **Discord Webhooks**: Send notifications to Discord channels for CAD events
+- **Discord Bot**: Automated webhook management and role verification
+
+## Prerequisites
+
+Before setting up Discord integration, you need:
+
+1. A Discord server where you have administrator permissions
+2. Access to the [Discord Developer Portal](https://discord.com/developers/applications)
+3. SnailyCAD instance with administrator access
+
+## Creating a Discord Application
+
+<Steps>
+  <Step title="Create Application">
+    Navigate to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**. Give it a name (e.g., "SnailyCAD Bot").
+  </Step>
+
+  <Step title="Get Application Credentials">
+    Go to the **OAuth2** section and copy:
+    - **Client ID**
+    - **Client Secret**
+    
+    Save these for your environment configuration.
+  </Step>
+
+  <Step title="Create Bot">
+    Navigate to the **Bot** section and click **Add Bot**. Once created:
+    - Copy the **Bot Token**
+    - Enable the following **Privileged Gateway Intents**:
+      - Server Members Intent
+      - Message Content Intent (optional, for future features)
+  </Step>
+
+  <Step title="Configure OAuth2 Redirects">
+    In the **OAuth2** section, add redirect URLs:
+    
+    ```
+    https://your-cad-domain.com/api/v1/auth/discord/callback
+    http://localhost:8080/v1/auth/discord/callback
+    ```
+    
+    Replace `your-cad-domain.com` with your actual domain.
+  </Step>
+
+  <Step title="Invite Bot to Server">
+    Generate an invite link in the **OAuth2** > **URL Generator** section:
+    - Select scopes: `bot`
+    - Select bot permissions:
+      - Manage Roles
+      - View Channels
+      - Send Messages
+      - Manage Webhooks
+    
+    Use the generated URL to invite the bot to your Discord server.
+  </Step>
+</Steps>
+
+## Environment Configuration
+
+Add these environment variables to your `.env` file:
+
+```bash
+# Discord OAuth2 (for authentication)
+DISCORD_CLIENT_ID="your_client_id_here"
+DISCORD_CLIENT_SECRET="your_client_secret_here"
+
+# Discord Bot (for webhooks and role sync)
+DISCORD_BOT_TOKEN="your_bot_token_here"
+DISCORD_SERVER_ID="your_server_id_here"
+```
+
+<Info>
+  To get your Discord Server ID, enable **Developer Mode** in Discord settings (User Settings > Advanced > Developer Mode), then right-click your server and select **Copy ID**.
+</Info>
+
+## Discord Authentication Setup
+
+<Steps>
+  <Step title="Enable Discord Auth Feature">
+    In SnailyCAD, navigate to **Admin** > **Manage** > **CAD Settings** > **Features**.
+    
+    Enable the **Discord Authentication** feature.
+  </Step>
+
+  <Step title="Configure User Linking">
+    Users can now link their Discord accounts by:
+    1. Going to **Account Settings**
+    2. Clicking **Link Discord Account**
+    3. Authorizing the OAuth2 connection
+  </Step>
+
+  <Step title="Test Authentication">
+    Try logging in with Discord at `/auth/discord` to verify the integration works.
+  </Step>
+</Steps>
+
+<Warning>
+  The first user (owner) cannot use Discord authentication for initial registration. They must create an account with username/password first.
+</Warning>
+
+## Discord Role Synchronization
+
+Map Discord roles to SnailyCAD permissions for automatic access control.
+
+<Steps>
+  <Step title="Navigate to Discord Settings">
+    Go to **Admin** > **Manage** > **CAD Settings** > **Discord** > **Roles**.
+  </Step>
+
+  <Step title="Fetch Discord Roles">
+    Click **Refresh Roles** to fetch all roles from your Discord server.
+  </Step>
+
+  <Step title="Map Roles to Permissions">
+    Configure role mappings:
+    
+    - **Admin Roles**: Users with these Discord roles get admin permissions
+    - **LEO Roles**: Access to law enforcement features
+    - **LEO Supervisor Roles**: Supervisor-level LEO permissions
+    - **EMS/FD Roles**: Access to emergency medical services
+    - **Dispatch Roles**: Access to dispatch interface
+    - **Tow Roles**: Access to tow operations
+    - **Taxi Roles**: Access to taxi operations
+    - **Courthouse Roles**: Access to court/legal features
+    - **Whitelist Role**: Users must have this role to access the CAD (if whitelisting enabled)
+  </Step>
+
+  <Step title="Configure Permission Sets">
+    For each role type, you can configure specific permissions that will be granted:
+    
+    - View permissions
+    - Create/edit permissions
+    - Delete permissions
+    - Management permissions
+  </Step>
+
+  <Step title="Save Configuration">
+    Click **Save** to apply role mappings. Users will receive permissions on their next login.
+  </Step>
+</Steps>
+
+## Discord Webhooks
+
+Send automated notifications to Discord channels for various CAD events.
+
+<Steps>
+  <Step title="Navigate to Webhook Settings">
+    Go to **Admin** > **Manage** > **CAD Settings** > **Discord** > **Webhooks**.
+  </Step>
+
+  <Step title="Refresh Channels">
+    Click **Refresh Channels** to load all text channels from your Discord server.
+  </Step>
+
+  <Step title="Configure Event Webhooks">
+    Select Discord channels for each event type:
+    
+    **Dispatch Events**
+    - **911 Calls**: New emergency calls created
+    - **Unit Status Changes**: When units change their status
+    - **Panic Button**: When an officer/deputy presses panic button
+    - **BOLOs**: New BOLO (Be On the Lookout) created
+    
+    **Records & Reports**
+    - **Citizen Records**: New arrest reports, tickets, warnings
+    - **Warrants**: New warrants issued
+    - **LEO Incidents**: Law enforcement incidents created
+    - **EMS/FD Incidents**: Medical/fire incidents created
+    
+    **Vehicle Events**
+    - **Vehicle Impounded**: When a vehicle is impounded
+    
+    **Citizen Events**
+    - **Citizen Declared Dead**: When a citizen is marked deceased
+    - **Bleeter Posts**: Social media posts (if enabled)
+    
+    **Administrative**
+    - **User Whitelist Status**: Whitelist status changes
+    - **Department Whitelist Status**: Department access changes
+  </Step>
+
+  <Step title="Add Custom Messages (Optional)">
+    For each webhook, you can add a custom message that will be sent with the notification. Use `{userId}` to mention the linked Discord user.
+    
+    Example: `{userId} has created a new 911 call!`
+  </Step>
+
+  <Step title="Test Webhooks">
+    Create test events in your CAD to verify webhooks are working:
+    - Create a test 911 call
+    - Change a unit status
+    - Create a test BOLO
+  </Step>
+</Steps>
+
+## Multiple Discord Servers
+
+You can configure SnailyCAD to work with multiple Discord servers:
+
+```bash
+# Separate server IDs with commas
+DISCORD_SERVER_ID="123456789,987654321,555555555"
+```
+
+The bot will:
+- Fetch roles and channels from all configured servers
+- Each role/channel will be labeled with its server
+- All servers must have the bot invited with proper permissions
+
+## Troubleshooting
+
+### Bot Not Fetching Roles/Channels
+
+1. Verify `DISCORD_BOT_TOKEN` is correct
+2. Ensure bot has proper permissions in your server
+3. Check that the bot is online in your Discord server
+4. Verify `DISCORD_SERVER_ID` matches your server
+
+### OAuth2 Authentication Failing
+
+1. Verify `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`
+2. Check redirect URLs in Discord Developer Portal
+3. Ensure `NEXT_PUBLIC_PROD_ORIGIN` is correctly set
+4. Check browser console for CORS errors
+
+### Webhooks Not Sending
+
+1. Verify channels still exist in Discord
+2. Check bot has "Manage Webhooks" permission
+3. Ensure the channel is a text channel (not voice/announcement)
+4. Look for errors in SnailyCAD logs
+
+### Role Sync Not Working
+
+1. Verify user has linked their Discord account
+2. Check that Discord roles are correctly mapped
+3. Ensure bot has "Manage Roles" permission
+4. Bot's role must be higher than roles it's trying to assign
+5. User needs to re-login after role changes
+
+## Security Considerations
+
+<Warning>
+  - Keep your `DISCORD_BOT_TOKEN` and `DISCORD_CLIENT_SECRET` secure
+  - Never commit these values to version control
+  - Use environment variables for all sensitive data
+  - Regularly rotate tokens if compromised
+</Warning>
+
+## API Endpoints
+
+For developers integrating with Discord features:
+
+- `GET /auth/discord` - Initiate Discord OAuth2 flow
+- `GET /auth/discord/callback` - OAuth2 callback handler
+- `DELETE /auth/discord` - Unlink Discord account
+- `GET /admin/manage/cad-settings/discord/roles` - Fetch Discord roles
+- `POST /admin/manage/cad-settings/discord/roles` - Update role mappings
+- `GET /admin/manage/cad-settings/discord/webhooks` - Fetch Discord channels
+- `POST /admin/manage/cad-settings/discord/webhooks` - Update webhook configuration
+
+## Best Practices
+
+1. **Test in Development**: Set up a test Discord server before configuring production
+2. **Document Role Structure**: Keep track of which Discord roles map to which CAD permissions
+3. **Monitor Webhooks**: Regularly check that webhooks are sending to correct channels
+4. **Role Hierarchy**: Ensure bot's Discord role is positioned correctly in server hierarchy
+5. **Limit Permissions**: Only grant the bot permissions it needs
+
+## Related Documentation
+
+- [Webhooks](/integrations/webhooks) - Configure raw webhooks for external services
+- [Permissions](/configuration/permissions) - Learn about CAD permission system
+- [Environment Variables](/configuration/environment-variables) - Complete environment configuration reference

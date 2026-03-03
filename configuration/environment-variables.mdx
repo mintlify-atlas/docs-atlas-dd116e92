@@ -1,0 +1,348 @@
+---
+title: Environment Variables
+description: Complete guide to configuring SnailyCAD environment variables
+---
+
+Environment variables are used to configure your SnailyCAD instance. These should be set in your `.env` file in the root directory of your installation.
+
+## Required Variables
+
+These variables must be configured for SnailyCAD to function properly.
+
+### Database Configuration
+
+<ParamField path="POSTGRES_PASSWORD" type="string" required>
+  The password for your PostgreSQL database.
+  
+  ```bash
+  POSTGRES_PASSWORD="postgres"
+  ```
+</ParamField>
+
+<ParamField path="POSTGRES_USER" type="string" required>
+  The username for your PostgreSQL database.
+  
+  ```bash
+  POSTGRES_USER="postgres"
+  ```
+</ParamField>
+
+<ParamField path="POSTGRES_DB" type="string" required>
+  The database name for your SnailyCAD installation.
+  
+  ```bash
+  POSTGRES_DB="snaily-cad-v4"
+  ```
+</ParamField>
+
+<ParamField path="DB_HOST" type="string" required>
+  The database host address.
+  
+  - **Docker install**: `"postgres"`
+  - **Standalone install**: `"localhost"` (or another IP)
+  
+  ```bash
+  DB_HOST="localhost"
+  ```
+</ParamField>
+
+<ParamField path="DB_PORT" type="string" required>
+  The database port.
+  
+  - **Docker install**: `"5432"`
+  - **Standalone install**: port to your PostgreSQL DB (default: `"5432"`)
+  
+  ```bash
+  DB_PORT="5432"
+  ```
+</ParamField>
+
+<ParamField path="DATABASE_URL" type="string" required>
+  The complete database connection URL. This is automatically constructed from other database variables.
+  
+  <Warning>Do not change this unless you know what you're doing!</Warning>
+  
+  ```bash
+  DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?sslmode=prefer
+  ```
+</ParamField>
+
+### Security Configuration
+
+<ParamField path="JWT_SECRET" type="string" required>
+  A random string of characters used to keep the CAD's cookies secured.
+  
+  <Warning>Make sure to change this to a random, secure value!</Warning>
+  
+  ```bash
+  JWT_SECRET="some-random-string-of-characters"
+  ```
+</ParamField>
+
+<ParamField path="ENCRYPTION_TOKEN" type="string" required>
+  A string of 32 characters long used for encryption. Generate one at [CodeBeautify](https://codebeautify.org/generate-random-string).
+  
+  <Warning>Must be exactly 32 characters long!</Warning>
+  
+  ```bash
+  ENCRYPTION_TOKEN="Geu2WGypP7irbwa3tCeeKS6YiyluFLep"
+  ```
+</ParamField>
+
+### URL Configuration
+
+<ParamField path="CORS_ORIGIN_URL" type="string" required>
+  The URL/IP to your site where the CAD is hosted. This is used for CORS (Cross-Origin Resource Sharing) configuration.
+  
+  Examples:
+  - `https://cad.mysite.com`
+  - `http://99.99.00.190:3000`
+  - `*` (allow all origins - not recommended for production)
+  
+  ```bash
+  CORS_ORIGIN_URL="http://192.168.x.x:3000"
+  ```
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_CLIENT_URL" type="string" required>
+  The URL/IP to your site where the CAD client is hosted.
+  
+  Examples:
+  - `https://cad.mysite.com`
+  - `http://99.99.00.190:3000`
+  
+  ```bash
+  NEXT_PUBLIC_CLIENT_URL="http://192.168.x.x:3000"
+  ```
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_PROD_ORIGIN" type="string" required>
+  The URL/IP to where the API is hosted.
+  
+  Examples:
+  - `https://cad-api.mysite.com/v1`
+  - `http://99.99.00.190:8080/v1`
+  
+  <Note>Must include the `/v1` suffix</Note>
+  
+  ```bash
+  NEXT_PUBLIC_PROD_ORIGIN="http://192.168.x.x:8080/v1"
+  ```
+</ParamField>
+
+### Port Configuration
+
+<ParamField path="PORT_API" type="number" default="8080">
+  The port on which the API will run.
+  
+  <Warning>When using Docker, make sure to change this in the `production.docker-compose.yml` file too.</Warning>
+  
+  ```bash
+  PORT_API=8080
+  ```
+</ParamField>
+
+<ParamField path="PORT_CLIENT" type="number" default="3000">
+  The port on which the client will run.
+  
+  ```bash
+  PORT_CLIENT=3000
+  ```
+</ParamField>
+
+### Environment
+
+<ParamField path="NODE_ENV" type="string" default="production">
+  The Node.js environment mode.
+  
+  <Warning>Do not change this unless you know what you're doing!</Warning>
+  
+  ```bash
+  NODE_ENV="production"
+  ```
+</ParamField>
+
+## Optional Variables
+
+These variables are optional and enable additional features when configured.
+
+### Domain and Security
+
+<ParamField path="DOMAIN" type="string">
+  Your domain name. Only enter this value if you're using a domain!
+  
+  <Note>Domain should only be the domain, NOT including sub-domains</Note>
+  
+  Example: `DOMAIN="example.com"`
+  
+  ```bash
+  DOMAIN=""
+  ```
+</ParamField>
+
+<ParamField path="SECURE_COOKIES_FOR_IFRAME" type="boolean" default="false">
+  Enable secure cookies for iframe embedding.
+  
+  <Warning>Can only be enabled when having valid SSL (https) and a domain.</Warning>
+  
+  ```bash
+  SECURE_COOKIES_FOR_IFRAME="false"
+  ```
+</ParamField>
+
+### Discord Integration
+
+<ParamField path="DISCORD_BOT_TOKEN" type="string">
+  Your Discord bot token for Discord integration features.
+  
+  See the [Discord Integration guide](/integrations/discord) for setup instructions.
+</ParamField>
+
+<ParamField path="DISCORD_CLIENT_ID" type="string">
+  Your Discord application client ID for Discord OAuth authentication.
+</ParamField>
+
+<ParamField path="DISCORD_CLIENT_SECRET" type="string">
+  Your Discord application client secret for Discord OAuth authentication.
+</ParamField>
+
+<ParamField path="DISCORD_SERVER_ID" type="string">
+  Your Discord server (guild) ID. Supports multiple servers separated by commas.
+  
+  Example: `DISCORD_SERVER_ID="123456789,987654321"`
+</ParamField>
+
+<ParamField path="DISCORD_METADATA_CAD_CONNECTED_NAME" type="string" default="SnailyCAD Connected">
+  The name displayed in Discord for the CAD connection metadata.
+</ParamField>
+
+### Steam Integration
+
+<ParamField path="STEAM_API_KEY" type="string">
+  Your Steam API key for Steam authentication.
+  
+  Obtain a Steam API key from [Steam's developer portal](https://steamcommunity.com/dev/apikey).
+</ParamField>
+
+### Google reCAPTCHA
+
+<ParamField path="GOOGLE_CAPTCHA_SECRET" type="string">
+  Your Google reCAPTCHA secret key for bot protection on registration and login.
+  
+  Get your reCAPTCHA keys from [Google reCAPTCHA](https://www.google.com/recaptcha/admin).
+</ParamField>
+
+### Advanced Options
+
+<ParamField path="IS_USING_ROOT_USER" type="boolean" default="false">
+  Enable this if running SnailyCAD as the root user (not recommended).
+  
+  This adds the `--no-sandbox` flag to Chromium-based operations.
+  
+  ```bash
+  IS_USING_ROOT_USER="false"
+  ```
+</ParamField>
+
+## Configuration Examples
+
+### Docker Installation
+
+```bash .env
+# Database
+POSTGRES_PASSWORD="your-secure-password"
+POSTGRES_USER="postgres"
+POSTGRES_DB="snaily-cad-v4"
+DB_HOST="postgres"
+DB_PORT="5432"
+
+# Security
+JWT_SECRET="your-random-jwt-secret-here"
+ENCRYPTION_TOKEN="Geu2WGypP7irbwa3tCeeKS6YiyluFLep"
+
+# URLs
+CORS_ORIGIN_URL="https://cad.example.com"
+NEXT_PUBLIC_CLIENT_URL="https://cad.example.com"
+NEXT_PUBLIC_PROD_ORIGIN="https://cad.example.com/api/v1"
+
+# Domain
+DOMAIN="example.com"
+SECURE_COOKIES_FOR_IFRAME="true"
+
+# Ports
+PORT_API=8080
+PORT_CLIENT=3000
+
+# Environment
+NODE_ENV="production"
+
+# Database URL
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?sslmode=prefer
+```
+
+### Standalone Installation
+
+```bash .env
+# Database
+POSTGRES_PASSWORD="your-secure-password"
+POSTGRES_USER="postgres"
+POSTGRES_DB="snaily-cad-v4"
+DB_HOST="localhost"
+DB_PORT="5432"
+
+# Security
+JWT_SECRET="your-random-jwt-secret-here"
+ENCRYPTION_TOKEN="Geu2WGypP7irbwa3tCeeKS6YiyluFLep"
+
+# URLs
+CORS_ORIGIN_URL="http://localhost:3000"
+NEXT_PUBLIC_CLIENT_URL="http://localhost:3000"
+NEXT_PUBLIC_PROD_ORIGIN="http://localhost:8080/v1"
+
+# Ports
+PORT_API=8080
+PORT_CLIENT=3000
+
+# Environment
+NODE_ENV="production"
+
+# Database URL
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?sslmode=prefer
+```
+
+## Security Best Practices
+
+1. **Never commit your `.env` file** to version control
+2. **Use strong, random values** for `JWT_SECRET` and `ENCRYPTION_TOKEN`
+3. **Keep your database credentials secure** and use strong passwords
+4. **Use HTTPS in production** with a valid SSL certificate
+5. **Restrict CORS origins** - avoid using `*` in production
+6. **Regularly rotate secrets** especially after team member changes
+
+## Troubleshooting
+
+### Connection Issues
+
+If you're experiencing connection issues:
+
+1. Verify all URLs are correct and accessible
+2. Check that ports are not blocked by firewalls
+3. Ensure database is running and accessible
+4. Verify CORS_ORIGIN_URL matches your client URL
+
+### Database Connection Errors
+
+If database connection fails:
+
+1. Verify database credentials are correct
+2. Ensure PostgreSQL is running
+3. Check DB_HOST and DB_PORT are correct
+4. Test connection with `psql` or another database client
+
+### Docker-Specific Issues
+
+For Docker installations:
+
+1. Use `DB_HOST="postgres"` not `"localhost"`
+2. Ensure ports in `production.docker-compose.yml` match your `.env`
+3. Restart containers after changing `.env` values

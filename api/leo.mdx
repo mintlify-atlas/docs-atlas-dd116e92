@@ -1,0 +1,441 @@
+---
+title: Law Enforcement
+description: LEO unit management, searches, and records
+---
+
+## Overview
+
+The Law Enforcement API provides endpoints for managing officers, conducting searches, creating records, handling incidents, and managing impound lots.
+
+<Info>
+Most LEO endpoints require the `Leo` permission and an active officer on duty.
+</Info>
+
+---
+
+## Get Active Officer
+
+<CodeGroup>
+```bash GET /api/leo/active-officer
+curl -X GET https://your-cad.com/api/leo/active-officer \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get the currently active officer for the authenticated user.
+
+### Response
+
+<ResponseField name="id" type="string">
+  Officer ID
+</ResponseField>
+
+<ResponseField name="callsign" type="string">
+  Officer's callsign
+</ResponseField>
+
+<ResponseField name="badgeNumber" type="string">
+  Badge number
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current status (on duty, busy, etc.)
+</ResponseField>
+
+<ResponseField name="department" type="object">
+  Department information
+</ResponseField>
+
+<ResponseField name="divisions" type="array">
+  Assigned divisions
+</ResponseField>
+
+<ResponseField name="citizen" type="object">
+  Associated citizen information
+</ResponseField>
+
+---
+
+## Get Active Officers
+
+<CodeGroup>
+```bash GET /api/leo/active-officers
+curl -X GET "https://your-cad.com/api/leo/active-officers?skip=0&includeAll=false" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all currently active officers and combined units.
+
+### Query Parameters
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all officers (ignore pagination)
+</ParamField>
+
+<ParamField query="skip" type="number" default="0">
+  Number of records to skip
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query for filtering officers
+</ParamField>
+
+### Response
+
+Returns an array of active officer and combined unit objects.
+
+---
+
+## Create/Update Officer
+
+<CodeGroup>
+```bash POST /api/leo
+curl -X POST https://your-cad.com/api/leo \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "department": "department-id",
+    "divisions": ["division-id-1"],
+    "callsign": "1A-23",
+    "badgeNumber": "12345"
+  }'
+```
+</CodeGroup>
+
+Create a new officer.
+
+### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID to link to officer
+</ParamField>
+
+<ParamField body="department" type="string" required>
+  Department ID
+</ParamField>
+
+<ParamField body="divisions" type="array" required>
+  Array of division IDs
+</ParamField>
+
+<ParamField body="callsign" type="string" required>
+  Officer callsign (e.g., "1A-23")
+</ParamField>
+
+<ParamField body="badgeNumber" type="string" required>
+  Badge number
+</ParamField>
+
+<ParamField body="rank" type="string">
+  Rank ID
+</ParamField>
+
+---
+
+## Toggle Panic Button
+
+<CodeGroup>
+```bash POST /api/leo/panic-button
+curl -X POST https://your-cad.com/api/leo/panic-button \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "officerId": "officer-id",
+    "isEnabled": true
+  }'
+```
+</CodeGroup>
+
+Enable or disable panic button for an officer.
+
+### Request Body
+
+<ParamField body="officerId" type="string" required>
+  Officer ID
+</ParamField>
+
+<ParamField body="isEnabled" type="boolean" required>
+  Enable or disable panic mode
+</ParamField>
+
+### Response
+
+Returns the updated officer object with panic button status.
+
+---
+
+## Search
+
+### Search by Name
+
+<CodeGroup>
+```bash POST /api/search/name
+curl -X POST https://your-cad.com/api/search/name \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe"
+  }'
+```
+</CodeGroup>
+
+Search for citizens by name, surname, or license numbers.
+
+#### Request Body
+
+<ParamField body="name" type="string" required>
+  Name to search (first, last, or full name)
+</ParamField>
+
+<ParamField body="id" type="string">
+  Specific citizen ID to search
+</ParamField>
+
+#### Response
+
+Returns array of matching citizens with records, warrants, vehicles, and weapons.
+
+### Search by Plate
+
+<CodeGroup>
+```bash POST /api/search/plate-or-vin
+curl -X POST https://your-cad.com/api/search/plate-or-vin \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "plateOrVin": "ABC123"
+  }'
+```
+</CodeGroup>
+
+Search for vehicles by license plate or VIN number.
+
+#### Request Body
+
+<ParamField body="plateOrVin" type="string" required>
+  License plate or VIN to search
+</ParamField>
+
+#### Response
+
+Returns vehicle information including owner, registration status, and flags.
+
+### Search by Weapon Serial
+
+<CodeGroup>
+```bash POST /api/search/weapon
+curl -X POST https://your-cad.com/api/search/weapon \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serialNumber": "SN123456"
+  }'
+```
+</CodeGroup>
+
+Search for weapons by serial number.
+
+#### Request Body
+
+<ParamField body="serialNumber" type="string" required>
+  Weapon serial number
+</ParamField>
+
+---
+
+## Records
+
+### Create Record
+
+<CodeGroup>
+```bash POST /api/search/actions/records
+curl -X POST https://your-cad.com/api/search/actions/records \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ARREST_REPORT",
+    "citizenId": "citizen-id",
+    "violations": [
+      {
+        "penalCodeId": "penal-code-id",
+        "fine": 500,
+        "jailTime": 0
+      }
+    ]
+  }'
+```
+</CodeGroup>
+
+Create an arrest report, ticket, or written warning.
+
+#### Request Body
+
+<ParamField body="type" type="string" required>
+  Record type: `ARREST_REPORT`, `TICKET`, or `WRITTEN_WARNING`
+</ParamField>
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID
+</ParamField>
+
+<ParamField body="violations" type="array" required>
+  Array of violation objects
+</ParamField>
+
+<ParamField body="notes" type="string">
+  Additional notes
+</ParamField>
+
+<ParamField body="postal" type="string">
+  Postal/zip code of incident
+</ParamField>
+
+---
+
+## Impound Lot
+
+### Get Impounded Vehicles
+
+<CodeGroup>
+```bash GET /api/leo/impounded-vehicles
+curl -X GET "https://your-cad.com/api/leo/impounded-vehicles?skip=0" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all impounded vehicles.
+
+#### Query Parameters
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all vehicles
+</ParamField>
+
+<ParamField query="search" type="string">
+  Search by plate or model
+</ParamField>
+
+#### Response
+
+<ResponseField name="totalCount" type="number">
+  Total impounded vehicles
+</ResponseField>
+
+<ResponseField name="vehicles" type="array">
+  Array of impounded vehicle objects
+</ResponseField>
+
+### Release Impounded Vehicle
+
+<CodeGroup>
+```bash DELETE /api/leo/impounded-vehicles/:id
+curl -X DELETE https://your-cad.com/api/leo/impounded-vehicles/{vehicleId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Release a vehicle from the impound lot.
+
+#### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Impounded vehicle ID or registered vehicle ID
+</ParamField>
+
+---
+
+## Incidents
+
+### Create Incident
+
+<CodeGroup>
+```bash POST /api/incidents
+curl -X POST https://your-cad.com/api/incidents \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Armed Robbery",
+    "description": "Incident description",
+    "postal": "90210",
+    "involvedOfficers": ["officer-id-1"]
+  }'
+```
+</CodeGroup>
+
+Create a new incident report.
+
+#### Request Body
+
+<ParamField body="title" type="string" required>
+  Incident title
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Detailed description
+</ParamField>
+
+<ParamField body="postal" type="string">
+  Postal/zip code
+</ParamField>
+
+<ParamField body="involvedOfficers" type="array">
+  Array of officer IDs involved
+</ParamField>
+
+---
+
+## Update Officer Callsign
+
+<CodeGroup>
+```bash PUT /api/leo/callsign/:officerId
+curl -X PUT https://your-cad.com/api/leo/callsign/{officerId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "callsign": "division-callsign-id"
+  }'
+```
+</CodeGroup>
+
+Update an officer's active division callsign.
+
+### Path Parameters
+
+<ParamField path="officerId" type="string" required>
+  Officer ID
+</ParamField>
+
+### Request Body
+
+<ParamField body="callsign" type="string" required>
+  Division callsign ID (or "null" to clear)
+</ParamField>
+
+---
+
+## Get Unit Qualifications
+
+<CodeGroup>
+```bash GET /api/leo/qualifications/:unitId
+curl -X GET https://your-cad.com/api/leo/qualifications/{unitId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get awards and qualifications for a unit.
+
+### Path Parameters
+
+<ParamField path="unitId" type="string" required>
+  Unit (officer/deputy) ID
+</ParamField>
+
+### Response
+
+Returns array of qualification objects with associated values.

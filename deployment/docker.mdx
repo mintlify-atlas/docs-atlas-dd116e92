@@ -1,0 +1,282 @@
+---
+title: Docker Installation
+description: Install SnailyCAD using Docker and Docker Compose
+---
+
+This guide covers installing SnailyCAD using Docker and Docker Compose. This is the recommended installation method for production deployments.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- [Docker](https://docs.docker.com/get-docker/) (version 20.10 or higher)
+- [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0 or higher)
+- [Git](https://git-scm.com/downloads)
+- At least 4GB of RAM
+- At least 10GB of free disk space
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the SnailyCAD repository to your server:
+
+    ```bash
+    git clone https://github.com/SnailyCAD/snaily-cadv4.git
+    cd snaily-cadv4
+    ```
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy the example environment file and configure it:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit the `.env` file and configure the following required variables:
+
+    ```bash
+    # Database credentials
+    POSTGRES_PASSWORD="your-secure-password"
+    POSTGRES_USER="postgres"
+    POSTGRES_DB="snaily-cad-v4"
+
+    # Database connection (use 'postgres' for Docker)
+    DB_HOST="postgres"
+    DB_PORT="5432"
+
+    # Security tokens
+    JWT_SECRET="your-random-jwt-secret"
+    ENCRYPTION_TOKEN="your-32-character-encryption-token"
+
+    # URLs (update with your domain or IP)
+    CORS_ORIGIN_URL="http://your-domain.com:3000"
+    NEXT_PUBLIC_CLIENT_URL="http://your-domain.com:3000"
+    NEXT_PUBLIC_PROD_ORIGIN="http://your-domain.com:8080/v1"
+
+    # Ports
+    PORT_API=8080
+    PORT_CLIENT=3000
+
+    # Environment
+    NODE_ENV="production"
+    ```
+
+    <Note>
+      Generate a secure 32-character encryption token at [CodeBeautify Random String Generator](https://codebeautify.org/generate-random-string).
+    </Note>
+  </Step>
+
+  <Step title="Create Docker network">
+    Create the external Docker network required by the compose file:
+
+    ```bash
+    docker network create cad_web
+    ```
+  </Step>
+
+  <Step title="Build and start containers">
+    Use the production Docker Compose file to build and start all services:
+
+    ```bash
+    docker compose -f production.docker-compose.yml up -d --build
+    ```
+
+    This will:
+    - Build the API and Client Docker images
+    - Start the PostgreSQL database
+    - Start the API server on port 8080
+    - Start the Client server on port 3000
+
+    <Info>
+      The initial build may take 10-20 minutes depending on your server's resources.
+    </Info>
+  </Step>
+
+  <Step title="Verify installation">
+    Check that all containers are running:
+
+    ```bash
+    docker ps
+    ```
+
+    You should see three containers:
+    - `snaily-cad-postgres`
+    - `snaily-cad-api`
+    - `snaily-cad-client`
+
+    View logs to ensure everything started correctly:
+
+    ```bash
+    # View all logs
+    docker compose -f production.docker-compose.yml logs
+
+    # View specific service logs
+    docker compose -f production.docker-compose.yml logs client
+    docker compose -f production.docker-compose.yml logs api
+    ```
+  </Step>
+
+  <Step title="Access SnailyCAD">
+    Open your browser and navigate to:
+
+    - Client: `http://your-server-ip:3000`
+    - API: `http://your-server-ip:8080/v1`
+
+    Complete the initial setup wizard to create your admin account.
+  </Step>
+</Steps>
+
+## Docker Compose Configuration
+
+The `production.docker-compose.yml` file defines three services:
+
+```yaml
+services:
+  postgres:
+    container_name: "snaily-cad-postgres"
+    image: postgres:latest
+    environment:
+      POSTGRES_PORT: ${DB_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - cad_web
+    volumes:
+      - ./.data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    container_name: "snaily-cad-api"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: api
+    ports:
+      - "${PORT_API}:${PORT_API}"
+    depends_on:
+      - postgres
+    networks:
+      - cad_web
+    restart: always
+    volumes:
+      - ./apps/api/public:/snailycad/apps/api/public
+
+  client:
+    container_name: "snaily-cad-client"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: client
+    ports:
+      - "${PORT_CLIENT}:${PORT_CLIENT}"
+    depends_on:
+      - postgres
+    networks:
+      - cad_web
+    restart: always
+
+networks:
+  cad_web:
+    external: true
+```
+
+## Managing Your Installation
+
+### Updating SnailyCAD
+
+To update to the latest version:
+
+```bash
+cd snaily-cadv4
+git pull
+docker compose -f production.docker-compose.yml up -d --build
+```
+
+### Stopping Services
+
+```bash
+docker compose -f production.docker-compose.yml down
+```
+
+### Restarting Services
+
+```bash
+docker compose -f production.docker-compose.yml restart
+```
+
+### Viewing Logs
+
+```bash
+# All services
+docker compose -f production.docker-compose.yml logs -f
+
+# Specific service
+docker compose -f production.docker-compose.yml logs -f client
+```
+
+### Database Backup
+
+Backup your PostgreSQL database:
+
+```bash
+docker exec snaily-cad-postgres pg_dump -U postgres snaily-cad-v4 > backup.sql
+```
+
+Restore from backup:
+
+```bash
+docker exec -i snaily-cad-postgres psql -U postgres snaily-cad-v4 < backup.sql
+```
+
+## Troubleshooting
+
+### Containers Won't Start
+
+Check the logs for error messages:
+
+```bash
+docker compose -f production.docker-compose.yml logs
+```
+
+### Port Already in Use
+
+If ports 3000 or 8080 are already in use, change them in your `.env` file:
+
+```bash
+PORT_API=8081
+PORT_CLIENT=3001
+```
+
+Then rebuild:
+
+```bash
+docker compose -f production.docker-compose.yml up -d --build
+```
+
+### Database Connection Issues
+
+Ensure `DB_HOST` is set to `postgres` (the Docker service name) in your `.env` file:
+
+```bash
+DB_HOST="postgres"
+```
+
+### Out of Memory
+
+Increase Docker's memory limit in Docker Desktop settings or your Docker daemon configuration.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Reverse Proxy Setup" icon="server" href="/deployment/reverse-proxy">
+    Configure nginx or Caddy for SSL and domain routing
+  </Card>
+  <Card title="Environment Variables" icon="gear" href="/configuration/environment-variables">
+    Complete environment variable reference
+  </Card>
+</CardGroup>

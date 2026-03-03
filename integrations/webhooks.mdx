@@ -1,0 +1,615 @@
+---
+title: Webhooks
+description: Configure raw webhooks to send CAD events to external services
+---
+
+Raw webhooks allow you to send SnailyCAD events to any external service that accepts webhook POST requests. Unlike Discord webhooks, raw webhooks send JSON data to custom endpoints.
+
+## Overview
+
+Raw webhooks enable integration with:
+
+- Custom Discord bots
+- Third-party notification services
+- Analytics platforms
+- Custom automation systems
+- External logging services
+- Community management tools
+
+## How Webhooks Work
+
+When an event occurs in SnailyCAD:
+
+1. Event is triggered (e.g., 911 call created)
+2. SnailyCAD prepares JSON payload with event data
+3. HTTP POST request sent to configured webhook URL
+4. External service receives and processes the data
+5. SnailyCAD continues operation (webhooks are fire-and-forget)
+
+<Info>
+  Webhooks are sent asynchronously and do not block CAD operations. If a webhook fails, SnailyCAD will log the error but continue functioning normally.
+</Info>
+
+## Configuring Webhooks
+
+<Steps>
+  <Step title="Navigate to Webhook Settings">
+    Go to **Admin** > **Manage** > **CAD Settings** > **Webhooks**.
+  </Step>
+
+  <Step title="Enter Webhook URLs">
+    For each event type you want to monitor, enter the full webhook URL:
+    
+    ```
+    https://your-service.com/api/webhooks/snailycad
+    https://example.com/hooks/911-calls
+    http://internal-server:3000/webhooks/cad-events
+    ```
+  </Step>
+
+  <Step title="Save Configuration">
+    Click **Save** to activate the webhooks. Events will now be sent to the configured URLs.
+  </Step>
+
+  <Step title="Test Webhooks">
+    Create test events in your CAD to verify webhooks are received:
+    - Create a test 911 call
+    - Change a unit status
+    - Create a test BOLO
+  </Step>
+</Steps>
+
+## Available Webhook Events
+
+### Dispatch Events
+
+**911 Calls** (`CALL_911`)
+- Triggered when a new 911 call is created
+- Includes caller information, location, description
+
+**Unit Status Changes** (`UNIT_STATUS`)
+- Triggered when any unit changes status
+- Includes unit identifier, old status, new status
+
+**Panic Button** (`PANIC_BUTTON`)
+- Triggered when officer/deputy presses panic button
+- Includes unit information, location, timestamp
+
+**BOLOs** (`BOLO`)
+- Triggered when new BOLO is created
+- Includes BOLO type (person/vehicle), description, details
+
+### Record Events
+
+**Citizen Records** (`CITIZEN_RECORD`)
+- Triggered when arrest report, ticket, or warning is created
+- Includes record type, citizen info, violations, officer details
+
+**Warrants** (`WARRANTS`)
+- Triggered when new warrant is issued
+- Includes warrant details, suspect information, issuing officer
+
+### Vehicle Events
+
+**Vehicle Impounded** (`VEHICLE_IMPOUNDED`)
+- Triggered when a vehicle is impounded
+- Includes vehicle details, owner, location, reason
+
+### Administrative Events
+
+**User Whitelist Status** (`USER_WHITELIST_STATUS`)
+- Triggered when user whitelist status changes
+- Includes user info, old status, new status
+
+**Department Whitelist Status** (`DEPARTMENT_WHITELIST_STATUS`)
+- Triggered when unit department access changes
+- Includes unit info, department, status change
+
+## Webhook Payload Structure
+
+All webhooks send JSON data with a consistent structure:
+
+```json
+{
+  "type": "CALL_911",
+  "timestamp": "2024-03-03T10:30:00Z",
+  "data": {
+    // Event-specific data
+  }
+}
+```
+
+### Example Payloads
+
+**911 Call Created**
+
+```json
+{
+  "type": "CALL_911",
+  "timestamp": "2024-03-03T10:30:00Z",
+  "data": {
+    "id": "call_123456",
+    "caseNumber": "2024-001",
+    "location": "Legion Square",
+    "postal": "101",
+    "description": "Armed robbery in progress",
+    "caller": {
+      "name": "John Doe",
+      "phone": "555-0123"
+    },
+    "priority": "high",
+    "assignedUnits": [
+      {
+        "id": "unit_789",
+        "callsign": "1A-23",
+        "officer": "Officer Smith"
+      }
+    ],
+    "createdAt": "2024-03-03T10:30:00Z"
+  }
+}
+```
+
+**Unit Status Change**
+
+```json
+{
+  "type": "UNIT_STATUS",
+  "timestamp": "2024-03-03T10:35:00Z",
+  "data": {
+    "unit": {
+      "id": "unit_789",
+      "callsign": "1A-23",
+      "officer": "Officer Smith"
+    },
+    "previousStatus": {
+      "id": "status_available",
+      "name": "Available"
+    },
+    "newStatus": {
+      "id": "status_enroute",
+      "name": "En Route"
+    },
+    "updatedAt": "2024-03-03T10:35:00Z"
+  }
+}
+```
+
+**Panic Button**
+
+```json
+{
+  "type": "PANIC_BUTTON",
+  "timestamp": "2024-03-03T10:40:00Z",
+  "data": {
+    "unit": {
+      "id": "unit_789",
+      "callsign": "1A-23",
+      "officer": "Officer Smith",
+      "department": "LSPD"
+    },
+    "location": {
+      "street": "Innocence Blvd",
+      "postal": "215"
+    },
+    "triggeredAt": "2024-03-03T10:40:00Z"
+  }
+}
+```
+
+**Vehicle Impounded**
+
+```json
+{
+  "type": "VEHICLE_IMPOUNDED",
+  "timestamp": "2024-03-03T11:00:00Z",
+  "data": {
+    "vehicle": {
+      "id": "veh_456",
+      "plate": "ABC123",
+      "model": "Vapid Dominator",
+      "color": "Red",
+      "vinNumber": "1HGBH41JXMN109186"
+    },
+    "owner": {
+      "name": "Jane Smith",
+      "ssn": "123-45-6789"
+    },
+    "impoundedBy": {
+      "unit": "1A-23",
+      "officer": "Officer Smith"
+    },
+    "reason": "Stolen vehicle recovery",
+    "location": "Mission Row PD",
+    "impoundedAt": "2024-03-03T11:00:00Z"
+  }
+}
+```
+
+**Citizen Record**
+
+```json
+{
+  "type": "CITIZEN_RECORD",
+  "timestamp": "2024-03-03T11:30:00Z",
+  "data": {
+    "recordType": "ARREST_REPORT",
+    "caseNumber": "AR-2024-042",
+    "citizen": {
+      "name": "John Doe",
+      "ssn": "987-65-4321",
+      "dateOfBirth": "1990-05-15"
+    },
+    "officer": {
+      "unit": "1A-23",
+      "name": "Officer Smith",
+      "department": "LSPD"
+    },
+    "violations": [
+      {
+        "charge": "Grand Theft Auto",
+        "counts": 1,
+        "jailTime": "60 months",
+        "fine": "$5000"
+      }
+    ],
+    "totalJailTime": "60 months",
+    "totalFine": "$5000",
+    "notes": "Vehicle recovered at scene",
+    "createdAt": "2024-03-03T11:30:00Z"
+  }
+}
+```
+
+## Headers
+
+All webhook requests include these headers:
+
+```http
+Content-Type: application/json
+SnailyCAD: true
+User-Agent: SnailyCAD-Webhook/4.0
+```
+
+The `SnailyCAD: true` header can be used to verify requests are coming from your CAD instance.
+
+## Building Webhook Receivers
+
+### Node.js/Express Example
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhooks/snailycad', (req, res) => {
+  // Verify it's from SnailyCAD
+  if (req.headers['snailycad'] !== 'true') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const { type, timestamp, data } = req.body;
+
+  // Handle different event types
+  switch (type) {
+    case 'CALL_911':
+      handleCall911(data);
+      break;
+    case 'PANIC_BUTTON':
+      handlePanicButton(data);
+      break;
+    case 'UNIT_STATUS':
+      handleStatusChange(data);
+      break;
+    default:
+      console.log(`Unknown event type: ${type}`);
+  }
+
+  // Always respond quickly
+  res.status(200).send('OK');
+});
+
+function handleCall911(data) {
+  console.log(`New 911 call: ${data.description}`);
+  // Send to Discord, log to database, etc.
+}
+
+function handlePanicButton(data) {
+  console.log(`PANIC: ${data.unit.callsign}`);
+  // Send urgent notifications
+}
+
+function handleStatusChange(data) {
+  console.log(`${data.unit.callsign}: ${data.newStatus.name}`);
+  // Update external status board
+}
+
+app.listen(3000, () => {
+  console.log('Webhook receiver running on port 3000');
+});
+```
+
+### Python/Flask Example
+
+```python
+from flask import Flask, request, jsonify
+import logging
+
+app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+
+@app.route('/webhooks/snailycad', methods=['POST'])
+def handle_webhook():
+    # Verify it's from SnailyCAD
+    if request.headers.get('SnailyCAD') != 'true':
+        return 'Forbidden', 403
+    
+    data = request.json
+    event_type = data.get('type')
+    timestamp = data.get('timestamp')
+    event_data = data.get('data')
+    
+    # Handle different events
+    if event_type == 'CALL_911':
+        handle_call_911(event_data)
+    elif event_type == 'PANIC_BUTTON':
+        handle_panic_button(event_data)
+    elif event_type == 'UNIT_STATUS':
+        handle_status_change(event_data)
+    else:
+        logging.warning(f'Unknown event type: {event_type}')
+    
+    return jsonify({'status': 'success'}), 200
+
+def handle_call_911(data):
+    logging.info(f"New 911 call: {data['description']}")
+    # Process the call
+
+def handle_panic_button(data):
+    logging.critical(f"PANIC: {data['unit']['callsign']}")
+    # Send urgent alerts
+
+def handle_status_change(data):
+    logging.info(f"{data['unit']['callsign']}: {data['newStatus']['name']}")
+    # Update status tracking
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+### PHP Example
+
+```php
+<?php
+// webhook-receiver.php
+
+header('Content-Type: application/json');
+
+// Verify request is from SnailyCAD
+if (!isset($_SERVER['HTTP_SNAILYCAD']) || $_SERVER['HTTP_SNAILYCAD'] !== 'true') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+// Get webhook data
+$data = json_decode(file_get_contents('php://input'), true);
+$type = $data['type'] ?? '';
+$timestamp = $data['timestamp'] ?? '';
+$eventData = $data['data'] ?? [];
+
+// Handle different event types
+switch ($type) {
+    case 'CALL_911':
+        handleCall911($eventData);
+        break;
+    case 'PANIC_BUTTON':
+        handlePanicButton($eventData);
+        break;
+    case 'UNIT_STATUS':
+        handleStatusChange($eventData);
+        break;
+    default:
+        error_log("Unknown event type: $type");
+}
+
+// Always respond with 200
+http_response_code(200);
+echo json_encode(['status' => 'success']);
+
+function handleCall911($data) {
+    error_log("New 911 call: " . $data['description']);
+    // Process call
+}
+
+function handlePanicButton($data) {
+    error_log("PANIC: " . $data['unit']['callsign']);
+    // Send alerts
+}
+
+function handleStatusChange($data) {
+    error_log($data['unit']['callsign'] . ": " . $data['newStatus']['name']);
+    // Update status
+}
+```
+
+## Testing Webhooks
+
+### Using webhook.site
+
+1. Go to [webhook.site](https://webhook.site)
+2. Copy the unique URL provided
+3. Enter it in SnailyCAD webhook configuration
+4. Trigger events in your CAD
+5. View received webhooks in real-time on webhook.site
+
+### Using ngrok for Local Development
+
+```bash
+# Start your local webhook receiver on port 3000
+node webhook-receiver.js
+
+# In another terminal, start ngrok
+ngrok http 3000
+
+# Copy the ngrok HTTPS URL (e.g., https://abc123.ngrok.io)
+# Use this URL in SnailyCAD webhook configuration
+```
+
+### Testing with curl
+
+```bash
+# Simulate a webhook POST request
+curl -X POST http://localhost:3000/webhooks/snailycad \
+  -H "Content-Type: application/json" \
+  -H "SnailyCAD: true" \
+  -d '{
+    "type": "CALL_911",
+    "timestamp": "2024-03-03T10:30:00Z",
+    "data": {
+      "description": "Test call",
+      "location": "Test Location"
+    }
+  }'
+```
+
+## Security Best Practices
+
+<Warning>
+  **Important Security Considerations**
+  - Never expose webhook URLs publicly without authentication
+  - Use HTTPS for all webhook endpoints in production
+  - Validate the `SnailyCAD` header on your receiver
+  - Implement rate limiting on your webhook endpoints
+  - Log all received webhooks for audit purposes
+</Warning>
+
+### Adding Authentication
+
+Since SnailyCAD doesn't currently support webhook signing, implement authentication on your receiver:
+
+**IP Whitelisting**
+```javascript
+const allowedIPs = ['192.168.1.100', '10.0.0.50'];
+
+app.use((req, res, next) => {
+  const clientIP = req.ip;
+  if (!allowedIPs.includes(clientIP)) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+});
+```
+
+**API Key in URL**
+```javascript
+app.post('/webhooks/snailycad/:apiKey', (req, res) => {
+  const { apiKey } = req.params;
+  if (apiKey !== process.env.WEBHOOK_API_KEY) {
+    return res.status(403).send('Forbidden');
+  }
+  // Process webhook
+});
+
+// Configure in SnailyCAD:
+// https://your-server.com/webhooks/snailycad/your-secret-key-here
+```
+
+## Troubleshooting
+
+### Webhooks Not Received
+
+1. **Check URL**: Verify webhook URL is correct and accessible
+2. **Test Endpoint**: Use curl to test your endpoint manually
+3. **Check Firewall**: Ensure SnailyCAD server can reach your webhook endpoint
+4. **Review Logs**: Check SnailyCAD logs for webhook errors
+5. **Verify Events**: Ensure events are actually being triggered in the CAD
+
+### Webhooks Failing
+
+1. **Timeout Issues**: Ensure your endpoint responds within 5 seconds
+2. **SSL Errors**: Verify valid SSL certificate if using HTTPS
+3. **Port Blocked**: Check that the port is open and accessible
+4. **Response Code**: Your endpoint should return 200 status code
+
+### Duplicate Webhooks
+
+1. Check you haven't configured the same URL multiple times
+2. Verify webhook isn't being triggered by multiple events
+3. Implement idempotency using the event ID/timestamp
+
+## Common Use Cases
+
+### Custom Discord Bot Integration
+
+```javascript
+const { Client, EmbedBuilder } = require('discord.js');
+const client = new Client({ intents: [] });
+
+app.post('/webhooks/snailycad', async (req, res) => {
+  const { type, data } = req.body;
+  
+  if (type === 'CALL_911') {
+    const channel = await client.channels.fetch('YOUR_CHANNEL_ID');
+    const embed = new EmbedBuilder()
+      .setTitle('🚨 New 911 Call')
+      .setDescription(data.description)
+      .addFields(
+        { name: 'Location', value: data.location },
+        { name: 'Caller', value: data.caller.name },
+        { name: 'Priority', value: data.priority }
+      )
+      .setColor('#FF0000')
+      .setTimestamp();
+    
+    await channel.send({ embeds: [embed] });
+  }
+  
+  res.status(200).send('OK');
+});
+```
+
+### Database Logging
+
+```javascript
+const { Pool } = require('pg');
+const pool = new Pool(/* config */);
+
+app.post('/webhooks/snailycad', async (req, res) => {
+  const { type, timestamp, data } = req.body;
+  
+  await pool.query(
+    'INSERT INTO cad_events (event_type, event_data, received_at) VALUES ($1, $2, $3)',
+    [type, JSON.stringify(data), timestamp]
+  );
+  
+  res.status(200).send('OK');
+});
+```
+
+### Analytics Integration
+
+```javascript
+const analytics = require('analytics-service');
+
+app.post('/webhooks/snailycad', (req, res) => {
+  const { type, data } = req.body;
+  
+  // Track event in analytics
+  analytics.track({
+    event: `CAD_${type}`,
+    properties: {
+      ...data,
+      source: 'SnailyCAD'
+    }
+  });
+  
+  res.status(200).send('OK');
+});
+```
+
+## Related Documentation
+
+- [Discord Integration](/integrations/discord) - Set up Discord-specific webhooks
+- [FiveM Integration](/integrations/fivem) - Connect FiveM server
+- [API Reference](/api/authentication) - SnailyCAD API documentation

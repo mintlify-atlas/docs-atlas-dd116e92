@@ -1,0 +1,570 @@
+---
+title: Dispatch
+description: Dispatch operations, 911 calls, BOLOs, and unit management
+---
+
+## Overview
+
+The Dispatch API provides endpoints for managing 911 calls, BOLOs (Be On the Lookout), active dispatchers, area of play, and unit status updates.
+
+<Info>
+Most dispatch endpoints require the `Dispatch` permission.
+</Info>
+
+---
+
+## Get Dispatch Data
+
+<CodeGroup>
+```bash GET /api/dispatch
+curl -X GET https://your-cad.com/api/dispatch \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get current dispatch information including area of play and active dispatcher count.
+
+### Response
+
+<ResponseField name="areaOfPlay" type="string">
+  Current area of play (AOP)
+</ResponseField>
+
+<ResponseField name="activeDispatchersCount" type="number">
+  Number of active dispatchers
+</ResponseField>
+
+<ResponseField name="userActiveDispatcher" type="object">
+  Current user's active dispatcher status
+</ResponseField>
+
+---
+
+## Update Area of Play
+
+<CodeGroup>
+```bash POST /api/dispatch/aop
+curl -X POST https://your-cad.com/api/dispatch/aop \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aop": "Los Santos"
+  }'
+```
+</CodeGroup>
+
+Update the current area of play.
+
+### Request Body
+
+<ParamField body="aop" type="string" required>
+  New area of play
+</ParamField>
+
+### Response
+
+<ResponseField name="areaOfPlay" type="string">
+  Updated area of play
+</ResponseField>
+
+---
+
+## Signal 100
+
+<CodeGroup>
+```bash POST /api/dispatch/signal-100
+curl -X POST https://your-cad.com/api/dispatch/signal-100 \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": true,
+    "callId": "optional-call-id"
+  }'
+```
+</CodeGroup>
+
+Enable or disable Signal 100 (emergency - all units standby).
+
+### Request Body
+
+<ParamField body="value" type="boolean" required>
+  Enable or disable Signal 100
+</ParamField>
+
+<ParamField body="callId" type="string">
+  Optional call ID to associate with Signal 100
+</ParamField>
+
+### Response
+
+<ResponseField name="value" type="boolean">
+  Current Signal 100 status
+</ResponseField>
+
+---
+
+## Set Dispatcher Active/Inactive
+
+<CodeGroup>
+```bash POST /api/dispatch/dispatchers-state
+curl -X POST https://your-cad.com/api/dispatch/dispatchers-state \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": true
+  }'
+```
+</CodeGroup>
+
+Set the authenticated user as an active or inactive dispatcher.
+
+### Request Body
+
+<ParamField body="value" type="boolean" required>
+  Set dispatcher active (true) or inactive (false)
+</ParamField>
+
+### Response
+
+<ResponseField name="dispatcher" type="object">
+  Active dispatcher object (or null if inactive)
+</ResponseField>
+
+<ResponseField name="activeDispatchersCount" type="number">
+  Updated count of active dispatchers
+</ResponseField>
+
+---
+
+## Update Active Dispatcher
+
+<CodeGroup>
+```bash PUT /api/dispatch/active-dispatcher
+curl -X PUT https://your-cad.com/api/dispatch/active-dispatcher \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "activeDepartment": "department-id"
+  }'
+```
+</CodeGroup>
+
+Update the active dispatcher's department filter.
+
+### Request Body
+
+<ParamField body="activeDepartment" type="string">
+  Department ID to filter by (or null for all)
+</ParamField>
+
+---
+
+## 911 Calls
+
+### Get All 911 Calls
+
+<CodeGroup>
+```bash GET /api/911-calls
+curl -X GET "https://your-cad.com/api/911-calls?includeEnded=false&skip=0" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all 911 calls with filtering options.
+
+#### Query Parameters
+
+<ParamField query="includeEnded" type="boolean" default="false">
+  Include ended calls
+</ParamField>
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query
+</ParamField>
+
+<ParamField query="department" type="string">
+  Filter by department ID
+</ParamField>
+
+<ParamField query="division" type="string">
+  Filter by division ID
+</ParamField>
+
+<ParamField query="assignedUnit" type="string">
+  Filter by assigned unit ID
+</ParamField>
+
+#### Response
+
+<ResponseField name="totalCount" type="number">
+  Total number of calls
+</ResponseField>
+
+<ResponseField name="calls" type="array">
+  Array of 911 call objects
+</ResponseField>
+
+### Get Call by ID
+
+<CodeGroup>
+```bash GET /api/911-calls/:id
+curl -X GET https://your-cad.com/api/911-calls/{callId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get a specific 911 call by ID or case number.
+
+#### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Call ID or case number
+</ParamField>
+
+### Create 911 Call
+
+<CodeGroup>
+```bash POST /api/911-calls
+curl -X POST https://your-cad.com/api/911-calls \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -H "is-from-dispatch: true" \
+  -d '{
+    "name": "John Doe",
+    "location": "123 Main Street",
+    "postal": "90210",
+    "description": "Suspicious activity reported",
+    "type": "call-type-id",
+    "situationCode": "situation-code-id"
+  }'
+```
+</CodeGroup>
+
+Create a new 911 call.
+
+#### Headers
+
+<ParamField header="is-from-dispatch" type="string">
+  Set to "true" if call is created by dispatch (bypasses approval)
+</ParamField>
+
+#### Request Body
+
+<ParamField body="name" type="string">
+  Caller name
+</ParamField>
+
+<ParamField body="location" type="string">
+  Incident location
+</ParamField>
+
+<ParamField body="postal" type="string">
+  Postal/zip code
+</ParamField>
+
+<ParamField body="description" type="string">
+  Call description
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Call type ID
+</ParamField>
+
+<ParamField body="situationCode" type="string">
+  Situation code ID
+</ParamField>
+
+### Update 911 Call
+
+<CodeGroup>
+```bash PUT /api/911-calls/:id
+curl -X PUT https://your-cad.com/api/911-calls/{callId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Updated call details",
+    "postal": "90211"
+  }'
+```
+</CodeGroup>
+
+Update an existing 911 call.
+
+### End 911 Call
+
+<CodeGroup>
+```bash PUT /api/911-calls/:id/end
+curl -X PUT https://your-cad.com/api/911-calls/{callId}/end \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Mark a 911 call as ended.
+
+---
+
+## BOLOs
+
+### Get All BOLOs
+
+<CodeGroup>
+```bash GET /api/bolos
+curl -X GET "https://your-cad.com/api/bolos?skip=0&type=VEHICLE" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all Be On the Lookout (BOLO) entries.
+
+#### Query Parameters
+
+<ParamField query="skip" type="number" default="0">
+  Pagination offset
+</ParamField>
+
+<ParamField query="includeAll" type="boolean" default="false">
+  Include all BOLOs
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query
+</ParamField>
+
+<ParamField query="type" type="string">
+  BOLO type: `VEHICLE`, `PERSON`, or `OTHER`
+</ParamField>
+
+#### Response
+
+<ResponseField name="bolos" type="array">
+  Array of BOLO objects
+</ResponseField>
+
+<ResponseField name="totalCount" type="number">
+  Total number of BOLOs
+</ResponseField>
+
+### Create BOLO
+
+<CodeGroup>
+```bash POST /api/bolos
+curl -X POST https://your-cad.com/api/bolos \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "VEHICLE",
+    "description": "Stolen vehicle",
+    "plate": "ABC123",
+    "model": "Honda Civic",
+    "color": "Red"
+  }'
+```
+</CodeGroup>
+
+Create a new BOLO.
+
+#### Request Body
+
+<ParamField body="type" type="string" required>
+  BOLO type: `VEHICLE`, `PERSON`, or `OTHER`
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  BOLO description
+</ParamField>
+
+<ParamField body="plate" type="string">
+  License plate (for vehicles)
+</ParamField>
+
+<ParamField body="model" type="string">
+  Vehicle model
+</ParamField>
+
+<ParamField body="color" type="string">
+  Vehicle or person color/description
+</ParamField>
+
+<ParamField body="name" type="string">
+  Person name (for person BOLOs)
+</ParamField>
+
+### Update BOLO
+
+<CodeGroup>
+```bash PUT /api/bolos/:id
+curl -X PUT https://your-cad.com/api/bolos/{boloId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Updated BOLO information"
+  }'
+```
+</CodeGroup>
+
+Update an existing BOLO.
+
+### Delete BOLO
+
+<CodeGroup>
+```bash DELETE /api/bolos/:id
+curl -X DELETE https://your-cad.com/api/bolos/{boloId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete a BOLO.
+
+---
+
+## Mark Vehicle as Stolen
+
+<CodeGroup>
+```bash POST /api/bolos/mark-stolen/:id
+curl -X POST https://your-cad.com/api/bolos/mark-stolen/{vehicleId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": true,
+    "color": "Red",
+    "plate": "ABC123"
+  }'
+```
+</CodeGroup>
+
+Mark a vehicle as stolen and optionally create a BOLO.
+
+### Request Body
+
+<ParamField body="id" type="string" required>
+  Vehicle ID
+</ParamField>
+
+<ParamField body="value" type="boolean" default="true">
+  Mark as stolen (true) or not stolen (false)
+</ParamField>
+
+<ParamField body="color" type="string">
+  Vehicle color
+</ParamField>
+
+<ParamField body="plate" type="string">
+  License plate
+</ParamField>
+
+---
+
+## Search Units
+
+<CodeGroup>
+```bash POST /api/dispatch/units/search
+curl -X POST https://your-cad.com/api/dispatch/units/search \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "1A-23"
+  }'
+```
+</CodeGroup>
+
+Search for active units (officers and deputies).
+
+### Request Body
+
+<ParamField body="query" type="string" required>
+  Search query (callsign, name, etc.)
+</ParamField>
+
+### Response
+
+Returns array of matching officers, deputies, and combined units (max 25 each).
+
+---
+
+## Update Unit Radio Channel
+
+<CodeGroup>
+```bash PUT /api/dispatch/radio-channel/:unitId
+curl -X PUT https://your-cad.com/api/dispatch/radio-channel/{unitId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "radioChannel": "channel-1"
+  }'
+```
+</CodeGroup>
+
+Update a unit's radio channel.
+
+### Path Parameters
+
+<ParamField path="unitId" type="string" required>
+  Unit ID (officer, deputy, or combined unit)
+</ParamField>
+
+### Request Body
+
+<ParamField body="radioChannel" type="string" required>
+  Radio channel ID
+</ParamField>
+
+---
+
+## Tones
+
+### Get Active Tones
+
+<CodeGroup>
+```bash GET /api/dispatch/tones
+curl -X GET https://your-cad.com/api/dispatch/tones \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all active notification tones.
+
+### Create/Update Tone
+
+<CodeGroup>
+```bash POST /api/dispatch/tones
+curl -X POST https://your-cad.com/api/dispatch/tones \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Major incident alert",
+    "leoTone": true,
+    "emsFdTone": true
+  }'
+```
+</CodeGroup>
+
+Create or update a tone notification.
+
+#### Request Body
+
+<ParamField body="description" type="string" required>
+  Tone description
+</ParamField>
+
+<ParamField body="leoTone" type="boolean">
+  Notify LEO units
+</ParamField>
+
+<ParamField body="emsFdTone" type="boolean">
+  Notify EMS-FD units
+</ParamField>
+
+### Delete Tone
+
+<CodeGroup>
+```bash DELETE /api/dispatch/tones/:id
+curl -X DELETE https://your-cad.com/api/dispatch/tones/{toneId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete an active tone.

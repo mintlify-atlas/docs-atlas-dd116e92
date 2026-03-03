@@ -1,0 +1,313 @@
+---
+title: Audit Logs
+description: View and understand audit logs for tracking administrative actions
+---
+
+## Overview
+
+Audit Logs provide a comprehensive record of all administrative and significant actions performed in your SnailyCAD instance. They help with accountability, troubleshooting, and compliance by tracking who did what and when.
+
+## Accessing Audit Logs
+
+Navigate to **Admin** > **Manage** > **Audit Logs** to access the audit logs interface.
+
+### Required Permissions
+
+Audit logs are available to users with any default admin permission. The system automatically grants access to administrators.
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/audit-logs.tsx:62-66
+```
+
+## Understanding Audit Logs
+
+Each audit log entry contains:
+- **Type** - The action type (e.g., UserBan, ValueUpdate)
+- **Executor** - Who performed the action (username or "Public API")
+- **Created At** - When the action occurred
+- **Actions** - View detailed changes
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/audit-logs.tsx:89-113
+```
+
+## Audit Log Types
+
+Audit logs are categorized by the type of action performed:
+
+### User Management
+- `UserBan` - User was banned
+- `UserUnban` - User was unbanned
+- `UserUpdate` - User details were modified
+- `UserDelete` - User account was deleted
+- `UserTempPassword` - Temporary password was generated
+- `UsersPruned` - Inactive users were pruned in bulk
+- `UserPermissionsUpdate` - User permissions were changed
+- `UserRolesUpdate` - User roles were changed
+- `UserApiTokenDelete` - User's API token was revoked
+- `User2FADelete` - User's 2FA was disabled
+- `UserWhitelistStatusChange` - User whitelist status changed
+
+### CAD Settings
+- `CadAPITokenRegenerated` - CAD API token was regenerated
+- `CADFeaturesUpdate` - CAD features were enabled/disabled
+- `CadSettingsUpdate` - General CAD settings were modified
+- `MiscCadSettingsUpdate` - Miscellaneous settings were changed
+- `UpdateDiscordRoles` - Discord role integration was updated
+- `UpdateDiscordWebhooks` - Discord webhooks were configured
+- `CadAPITokenRemoved` - API token was removed
+- `CadAPITokenEnabled` - API token was enabled
+- `CadAutoSetPropertiesUpdate` - Auto-set properties were modified
+- `UpdateRawWebhooks` - Raw webhooks were updated
+
+### Citizens & Records
+- `CitizenUpdate` - Citizen details were modified
+- `CitizenDelete` - Citizen was deleted
+- `CitizenRecordRemove` - Arrest/citation record was removed
+- `CitizenWarrantRemove` - Warrant was removed
+
+### Units
+- `UnitUpdate` - Unit details were modified
+- `UnitDelete` - Unit was deleted
+- `UnitsSetOffDuty` - Units were set off-duty
+- `TemporaryUnitCreate` - Temporary unit was created
+- `TemporaryUnitUpdate` - Temporary unit was modified
+- `UnitsPruned` - Inactive units were pruned
+- `UnitQualificationSuspended` - Unit qualification was suspended
+- `UnitQualificationAdd` - Qualification was added to unit
+- `UnitQualificationRemove` - Qualification was removed from unit
+- `UnitDepartmentDeclined` - Unit's department join request was declined
+- `UnitDepartmentAccepted` - Unit's department join request was accepted
+
+### Businesses
+- `BusinessUpdate` - Business details were modified
+- `BusinessDelete` - Business was deleted
+- `BusinessEmployeeUpdate` - Employee details were updated
+- `BusinessEmployeeFire` - Employee was fired
+
+### Custom Fields & Roles
+- `CustomFieldCreate` - Custom field was created
+- `CustomFieldUpdate` - Custom field was modified
+- `CustomFieldDelete` - Custom field was deleted
+- `CustomRoleCreate` - Custom role was created
+- `CustomRoleUpdate` - Custom role was modified
+- `CustomRoleDelete` - Custom role was deleted
+
+### Values
+- `ValueAdd` - Value was created
+- `ValueUpdate` - Value was modified
+- `ValueRemove` - Value was deleted
+- `ValueBulkRemove` - Multiple values were deleted
+
+### Courthouse
+- `ExpungementRequestAccepted` - Expungement request was approved
+- `ExpungementRequestDeclined` - Expungement request was denied
+- `NameChangeRequestAccepted` - Name change request was approved
+- `NameChangeRequestDeclined` - Name change request was denied
+- `ActiveWarrantAccepted` - Active warrant was approved
+- `ActiveWarrantDeclined` - Active warrant was denied
+
+### Dispatch & Operations
+- `Calls911Purge` - 911 calls were purged
+- `LeoIncidentsPurged` - LEO incidents were purged
+- `EmsIncidentsPurged` - EMS/FD incidents were purged
+- `Signal100Toggled` - Signal 100 was toggled
+- `Call911Create` - 911 call was created
+
+```tsx
+// Source: packages/audit-logger/src/types/action-types.ts:1-76
+```
+
+## Viewing Audit Logs
+
+The audit logs page displays a paginated table of all actions:
+
+1. **Default View** - Shows most recent actions first
+2. **Sorting** - Click column headers to sort by:
+   - Executor (alphabetical)
+   - Created At (chronological)
+3. **Pagination** - Navigate through pages of logs
+
+### Filtering by Type
+
+Use the **Type** dropdown to filter logs:
+
+1. Click the **Type** dropdown
+2. Select an action type (e.g., "UserBan")
+3. View only logs of that type
+4. Click **Clear** to remove filter
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/audit-logs.tsx:74-87
+```
+
+### Searching Logs
+
+Use the search box to find logs:
+- Search by executor username
+- Search by action type
+- Real-time filtering as you type
+
+## Viewing Detailed Changes (Diff)
+
+Click **View Diff** to see what changed:
+
+1. Click **View Diff** button next to an audit log
+2. A modal opens showing:
+   - **Previous** - State before the change (if applicable)
+   - **New** - State after the change
+   - **Differences** - Highlighted changes
+
+The diff view shows:
+- Added fields (highlighted in green)
+- Removed fields (highlighted in red)
+- Changed values (side-by-side comparison)
+
+**Example for UserPermissionsUpdate:**
+```
+Previous Permissions:
+  - ViewUsers
+  - ManageUsers
+
+New Permissions:
+  - ViewUsers
+  - ManageUsers
+  - BanUsers  (added)
+  - DeleteUsers  (added)
+```
+
+## Understanding Executors
+
+**User Actions:**
+- Shows the username of the admin who performed the action
+- Clicking on the executor name may filter to show their actions
+
+**Public API:**
+- Actions performed via the API without a specific user
+- Usually from automated systems or integrations
+
+**System Actions:**
+- Automated actions by the system itself
+- May not have an executor listed
+
+## Audit Log Retention
+
+Audit logs are stored permanently by default. Consider:
+- **Database Size** - Logs grow over time and consume database space
+- **Performance** - Very large log tables may slow queries
+- **Compliance** - Some jurisdictions require log retention for specific periods
+
+<Note>
+  SnailyCAD does not automatically purge audit logs. Implement a retention policy based on your needs.
+</Note>
+
+## API Access
+
+Audit logs can be accessed via the API:
+
+```bash
+GET /admin/manage/cad-settings/audit-logs
+```
+
+**Query Parameters:**
+- `skip` - Pagination offset
+- `query` - Search query
+- `type` - Filter by action type
+- `sorting` - Sort field and direction
+
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "id": "...",
+      "action": {
+        "type": "UserBan",
+        "new": { "id": "...", "username": "john_doe", "banned": true }
+      },
+      "executor": {
+        "id": "...",
+        "username": "admin"
+      },
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "totalCount": 1250
+}
+```
+
+## Use Cases
+
+### Security Auditing
+
+Review administrative actions for security purposes:
+- Identify unauthorized changes
+- Track who banned users and why
+- Monitor permission changes
+- Detect suspicious API usage
+
+### Troubleshooting
+
+Diagnose issues by reviewing recent changes:
+- "Who changed this setting?"
+- "When was this user deleted?"
+- "What permissions did this user have before?"
+
+### Compliance
+
+Meet regulatory requirements:
+- Track all data modifications
+- Prove who accessed what data
+- Demonstrate accountability
+- Generate audit reports
+
+### User Support
+
+Help users with questions:
+- "Was my ban appeal processed?"
+- "When was my whitelist status changed?"
+- "Who approved my expungement request?"
+
+## Best Practices
+
+1. **Regular Review** - Check audit logs weekly for unusual activity
+2. **Filter Effectively** - Use type filters to focus on specific actions
+3. **Export for Analysis** - Use API to export logs for deeper analysis
+4. **Retention Policy** - Define how long to keep logs (e.g., 1 year)
+5. **Secure Access** - Limit audit log access to trusted administrators
+6. **Action Documentation** - When performing sensitive actions, note the reason
+
+## Limitations
+
+- **No Undo** - Audit logs are read-only; you cannot revert actions from logs
+- **Not All Actions** - Only administrative and significant actions are logged (not every page view)
+- **No User Data** - Logs show that changes occurred but may not show full sensitive data
+- **Pagination** - Very old logs require scrolling through many pages
+
+## Troubleshooting
+
+### Logs Not Appearing
+
+- **Permissions** - Verify you have admin permissions
+- **Time Range** - Logs may be on a different page; use search
+- **Action Type** - Not all actions are logged; check the action type list
+
+### Cannot View Diff
+
+- **Old Logs** - Very old logs may not have diff data
+- **Delete Actions** - Deletion logs only show the deleted item, not a diff
+- **Create Actions** - Creation logs only show the new item
+
+### Performance Issues
+
+- **Large Database** - If logs are slow to load, consider archiving old logs
+- **Filters** - Use filters to reduce the result set
+- **API Access** - Use the API for bulk analysis instead of the web UI
+
+## Related Documentation
+
+- [User Management](/admin/user-management) - Actions that generate user audit logs
+- [Custom Roles](/admin/custom-roles) - Role change audit logs
+- [Custom Fields](/admin/custom-fields) - Field modification audit logs
+- [Values](/admin/values) - Value change audit logs
+- [CAD Settings](/configuration/cad-settings) - Setting change audit logs

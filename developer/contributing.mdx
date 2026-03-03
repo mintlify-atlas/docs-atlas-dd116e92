@@ -1,0 +1,372 @@
+---
+title: Contributing Guidelines
+description: How to contribute to SnailyCAD development
+---
+
+Thank you for your interest in contributing to SnailyCAD! This guide will help you understand how to contribute effectively.
+
+## Code of Conduct
+
+By participating in this project, you agree to maintain a respectful and inclusive environment. Be kind, professional, and constructive in all interactions.
+
+## Ways to Contribute
+
+There are many ways to contribute to SnailyCAD:
+
+- **Bug fixes** - Fix issues and improve stability
+- **New features** - Add requested functionality
+- **Documentation** - Improve guides and API docs
+- **Translations** - Add or update language files
+- **Code review** - Review pull requests from others
+- **Testing** - Test new features and report bugs
+- **Design** - Improve UI/UX
+
+## Getting Started
+
+Before you start contributing:
+
+1. **Check existing issues** - See if someone is already working on it
+2. **Discuss major changes** - Open an issue to discuss large features before implementing
+3. **Follow the setup guide** - Complete the [Getting Started](/developer/getting-started) guide
+4. **Read the architecture docs** - Understand the [Architecture](/developer/architecture)
+
+## Contributing Code
+
+### 1. Fork the Repository
+
+Create your own fork of the repository:
+
+1. Visit [github.com/SnailyCAD/snaily-cadv4](https://github.com/SnailyCAD/snaily-cadv4)
+2. Click "Fork" in the top right
+3. Clone your fork locally:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/snaily-cadv4.git
+cd snaily-cadv4
+```
+
+### 2. Create a Feature Branch
+
+Create a new branch for your work:
+
+```bash
+git checkout -b feature/my-cool-feature
+```
+
+**Branch naming conventions:**
+
+- `feature/` - New features (e.g., `feature/vehicle-search`)
+- `fix/` - Bug fixes (e.g., `fix/login-error`)
+- `docs/` - Documentation updates (e.g., `docs/api-reference`)
+- `refactor/` - Code refactoring (e.g., `refactor/auth-service`)
+- `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`)
+
+### 3. Make Your Changes
+
+Follow these guidelines while coding:
+
+#### Code Style
+
+- Use **TypeScript** for all new code
+- Follow the existing code style
+- Run `pnpm format` before committing
+- Run `pnpm lint:fix` to fix linting issues
+- Ensure `pnpm typecheck` passes without errors
+
+#### Writing Quality Code
+
+**Do:**
+- Write clear, self-documenting code
+- Add comments for complex logic
+- Use meaningful variable and function names
+- Keep functions small and focused
+- Follow SOLID principles
+- Add proper error handling
+
+**Don't:**
+- Leave commented-out code
+- Use `any` type unless absolutely necessary
+- Ignore TypeScript errors
+- Skip validation on user inputs
+- Hardcode sensitive data or configuration
+
+#### Testing
+
+While SnailyCAD doesn't have comprehensive test coverage yet, consider:
+
+- Testing your changes manually
+- Verifying edge cases
+- Checking both success and error scenarios
+- Testing on different browsers (for UI changes)
+
+### 4. Commit Your Changes
+
+Write clear, descriptive commit messages:
+
+```bash
+git add .
+git commit -m "Added vehicle search functionality"
+```
+
+**Commit message guidelines:**
+
+- Use present tense ("Add feature" not "Added feature")
+- Be specific and descriptive
+- Reference issue numbers when applicable
+- Keep the first line under 72 characters
+
+**Good examples:**
+```
+Add vehicle search by plate number
+Fix login error when using special characters
+Update German translations for dispatch page
+Refactor authentication service for better performance
+```
+
+**Bad examples:**
+```
+Fix bug
+Update stuff
+Changes
+WIP
+```
+
+### 5. Push to Your Fork
+
+Push your changes to your fork:
+
+```bash
+git push origin feature/my-cool-feature
+```
+
+### 6. Open a Pull Request
+
+1. Go to the [SnailyCAD repository](https://github.com/SnailyCAD/snaily-cadv4)
+2. Click "Pull requests" → "New pull request"
+3. Click "compare across forks"
+4. Select your fork and branch
+5. Fill out the pull request template
+6. Click "Create pull request"
+
+#### Pull Request Guidelines
+
+**Title:**
+- Be clear and descriptive
+- Use the same format as commit messages
+
+**Description:**
+- Explain what changes were made and why
+- Reference related issues (e.g., "Fixes #123")
+- Include screenshots for UI changes
+- List any breaking changes
+- Mention if documentation needs updating
+
+**Example:**
+```markdown
+## Description
+Adds vehicle search functionality allowing users to search by plate number.
+
+## Changes
+- Added search input to vehicles page
+- Implemented API endpoint for vehicle search
+- Added validation for plate number format
+
+## Related Issues
+Fixes #456
+
+## Screenshots
+[Include screenshots here]
+
+## Checklist
+- [x] Code follows project style guidelines
+- [x] Tested locally
+- [x] No console errors
+- [x] Updated translations if needed
+```
+
+### 7. Code Review Process
+
+After submitting your PR:
+
+1. **Automated checks** - GitHub Actions will run linting and type checking
+2. **Review** - Maintainers will review your code
+3. **Feedback** - Address any requested changes
+4. **Approval** - Once approved, your PR will be merged
+
+**Responding to feedback:**
+- Be open to suggestions
+- Ask questions if you don't understand
+- Make requested changes promptly
+- Push new commits to the same branch
+
+## Contributing Translations
+
+Translations help make SnailyCAD accessible to users worldwide.
+
+### Adding a New Language
+
+1. Fork and create a branch:
+```bash
+git checkout -b chore/add-spanish-translation
+```
+
+2. Copy the English locale folder:
+```bash
+cp -r apps/client/locales/en apps/client/locales/es
+```
+
+3. Translate the JSON files in the new folder
+
+4. Validate translations:
+```bash
+pnpm --filter "@snailycad/client" validate-locales
+```
+
+5. Commit and push:
+```bash
+git add .
+git commit -m "Add Spanish translation"
+git push origin chore/add-spanish-translation
+```
+
+6. Open a pull request
+
+### Updating Existing Translations
+
+1. Navigate to `apps/client/locales/[language]/`
+2. Update the relevant JSON files
+3. Validate and submit a PR as above
+
+**Translation Guidelines:**
+- Maintain the same JSON structure as English
+- Use appropriate formality for the language
+- Keep technical terms consistent
+- Test translations in the UI when possible
+
+## Reporting Bugs
+
+Found a bug? Help us fix it:
+
+1. **Check existing issues** - It may already be reported
+2. **Create a new issue** - Use the bug report template
+3. **Provide details:**
+   - Steps to reproduce
+   - Expected behavior
+   - Actual behavior
+   - Screenshots or error messages
+   - Environment (browser, OS, SnailyCAD version)
+
+## Requesting Features
+
+Have an idea for a new feature?
+
+1. **Check existing issues** - It may already be requested
+2. **Create a feature request** - Use the feature request template
+3. **Provide details:**
+   - Clear description of the feature
+   - Use cases and benefits
+   - Potential implementation approach (optional)
+   - Mockups or examples (optional)
+
+## Development Best Practices
+
+### Working with the Monorepo
+
+**Running commands in specific workspaces:**
+```bash
+# Run command in API
+pnpm --filter "@snailycad/api" <command>
+
+# Run command in client
+pnpm --filter "@snailycad/client" <command>
+
+# Run command in specific package
+pnpm --filter "@snailycad/schemas" <command>
+```
+
+**Adding dependencies:**
+```bash
+# Add to API
+pnpm --filter "@snailycad/api" add express
+
+# Add to client
+pnpm --filter "@snailycad/client" add react-query
+
+# Add to root (devDependencies)
+pnpm add -Dw prettier
+```
+
+### Database Changes
+
+When modifying the database schema:
+
+1. **Edit the Prisma schema:**
+   - Located at `apps/api/prisma/schema.prisma`
+   - Follow existing patterns
+
+2. **Create a migration:**
+```bash
+pnpm --filter "@snailycad/api" prisma migrate dev --name your_migration_name
+```
+
+3. **Verify the migration:**
+   - Check the generated SQL in `apps/api/prisma/migrations/`
+   - Test both up and down migrations
+
+4. **Update related code:**
+   - Controllers
+   - Services
+   - Client components
+   - Validation schemas
+
+### API Changes
+
+When adding or modifying API endpoints:
+
+1. **Create/update controller** - In `apps/api/src/controllers/`
+2. **Add validation schema** - In `packages/schemas/`
+3. **Update types if needed** - Prisma schema or custom types
+4. **Document the endpoint** - Use Ts.ED decorators for Swagger docs
+5. **Test the endpoint** - Use the Swagger UI or Postman
+
+### UI Changes
+
+When modifying the user interface:
+
+1. **Follow existing patterns** - Check similar components
+2. **Use TailwindCSS** - Prefer utility classes over custom CSS
+3. **Ensure responsiveness** - Test on mobile, tablet, and desktop
+4. **Check accessibility** - Use semantic HTML and ARIA labels
+5. **Update translations** - Add new translation keys if needed
+6. **Test dark mode** - SnailyCAD supports dark mode
+
+## Getting Help
+
+Need help with your contribution?
+
+- **Discord** - Join the [community Discord](https://discord.gg/eGnrPqEH7U)
+- **GitHub Discussions** - Ask questions in discussions
+- **Issues** - Comment on related issues
+- **Documentation** - Check the [official docs](https://docs.snailycad.org)
+
+## Recognition
+
+All contributors are valued and recognized:
+
+- Contributors are listed in GitHub's contributors page
+- Significant contributors may be added to the README
+- Join the [sponsors list](https://github.com/SnailyCAD/snaily-cadv4#sponsors) by sponsoring the project
+
+## License
+
+By contributing to SnailyCAD, you agree that your contributions will be licensed under the [MIT License](https://github.com/SnailyCAD/snaily-cadv4/blob/main/LICENSE).
+
+## Questions?
+
+If you have any questions about contributing, feel free to:
+
+- Open an issue for discussion
+- Ask in the Discord community
+- Tag maintainers in your PR comments
+
+Thank you for contributing to SnailyCAD!

@@ -1,0 +1,627 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for SnailyCAD deployment and operations
+---
+
+This guide covers common issues you may encounter when deploying, updating, or operating SnailyCAD, along with their solutions.
+
+## Quick Diagnostics
+
+### Check Service Status
+
+```bash
+# Docker installation
+docker ps
+docker compose -f production.docker-compose.yml ps
+
+# Standalone installation
+pm2 status
+# or
+systemctl status snailycad-api snailycad-client
+```
+
+### View Logs
+
+```bash
+# Docker - all services
+docker compose -f production.docker-compose.yml logs
+
+# Docker - specific service
+docker logs snaily-cad-api
+docker logs snaily-cad-client
+docker logs snaily-cad-postgres
+
+# Docker - follow logs in real-time
+docker logs -f snaily-cad-api
+
+# Standalone
+pm2 logs
+pm2 logs snailycad-api
+```
+
+## Installation Issues
+
+### Docker Network Error
+
+**Error**: `network cad_web declared as external, but could not be found`
+
+**Solution**: Create the Docker network before starting containers (production.docker-compose.yml:52-54):
+
+```bash
+docker network create cad_web
+docker compose -f production.docker-compose.yml up -d
+```
+
+### Database Connection Failed
+
+**Error**: `Error: P1001: Can't reach database server`
+
+**Solution**: Verify database configuration in .env.example:4-30:
+
+1. **Check database is running**:
+   ```bash
+   docker ps | grep postgres
+   # or
+   systemctl status postgresql
+   ```
+
+2. **Verify environment variables**:
+   ```bash
+   # Check DATABASE_URL format (.env.example:86)
+   DATABASE_URL=postgresql://user:password@host:port/database?sslmode=prefer
+   
+   # Docker: DB_HOST should be "postgres" (container name)
+   # Standalone: DB_HOST should be "localhost" or IP
+   ```
+
+3. **Test database connection**:
+   ```bash
+   # Docker
+   docker exec snaily-cad-postgres psql -U postgres -d snaily-cad-v4 -c "SELECT 1;"
+   
+   # Standalone
+   psql -U postgres -h localhost -d snaily-cad-v4 -c "SELECT 1;"
+   ```
+
+### Port Already in Use
+
+**Error**: `bind: address already in use`
+
+**Solution**: Change ports in .env or stop conflicting services:
+
+```bash
+# Find what's using the port
+lsof -i :3000  # Client port
+lsof -i :8080  # API port
+lsof -i :5432  # PostgreSQL port
+
+# Update .env.example:72-79
+PORT_API=8080
+PORT_CLIENT=3000
+
+# Or stop conflicting service
+sudo systemctl stop apache2  # If using port 80
+```
+
+### Node Version Mismatch
+
+**Error**: `The engine "node" is incompatible with this module`
+
+**Solution**: SnailyCAD requires Node.js >= 18.16.0 (package.json:32-34):
+
+```bash
+# Check Node version
+node --version
+
+# Install correct version
+nvm install 20
+nvm use 20
+
+# Or use Docker (uses node:20-slim)
+```
+
+### PNPM Not Found
+
+**Error**: `pnpm: command not found`
+
+**Solution**: Install pnpm (package.json:54):
+
+```bash
+# Install pnpm globally
+npm install -g pnpm@9.0.4
+
+# Verify installation
+pnpm --version
+```
+
+## Runtime Issues
+
+### 500 Internal Server Error
+
+**Symptoms**: White screen or 500 error when accessing the CAD
+
+**Solutions**:
+
+1. **Check API logs**:
+   ```bash
+   docker logs snaily-cad-api
+   ```
+
+2. **Verify environment variables**:
+   - `JWT_SECRET` must be set (.env.example:35)
+   - `ENCRYPTION_TOKEN` must be 32 characters (.env.example:41)
+   - `CORS_ORIGIN_URL` matches client URL (.env.example:47)
+
+3. **Check database migrations**:
+   ```bash
+   docker exec snaily-cad-api pnpm prisma migrate status
+   
+   # Apply pending migrations
+   docker exec snaily-cad-api pnpm prisma migrate deploy
+   ```
+
+4. **Regenerate Prisma client**:
+   ```bash
+   docker exec snaily-cad-api pnpm prisma generate
+   docker compose -f production.docker-compose.yml restart api
+   ```
+
+### CORS Errors
+
+**Error**: `Access to fetch at '...' from origin '...' has been blocked by CORS policy`
+
+**Solution**: Fix CORS configuration in .env.example:44-59:
+
+```bash
+# These must match your actual URLs
+CORS_ORIGIN_URL="http://your-domain.com:3000"
+NEXT_PUBLIC_CLIENT_URL="http://your-domain.com:3000"
+NEXT_PUBLIC_PROD_ORIGIN="http://your-domain.com:8080/v1"
+
+# Or use wildcard for testing (NOT recommended for production)
+CORS_ORIGIN_URL="*"
+```
+
+**Restart after changing**:
+```bash
+docker compose -f production.docker-compose.yml restart
+```
+
+### Authentication Issues
+
+**Symptoms**: Can't login, "Invalid credentials", or immediately logged out
+
+**Solutions**:
+
+1. **Check JWT_SECRET**:
+   ```bash
+   # Verify JWT_SECRET is set and not default value
+   # .env.example:35
+   JWT_SECRET="some-random-string-of-characters"  # Change this!
+   ```
+
+2. **Check cookie settings**:
+   ```bash
+   # If using HTTPS and domain (.env.example:67-70)
+   DOMAIN="yourdomain.com"
+   SECURE_COOKIES_FOR_IFRAME="true"  # Only with HTTPS
+   ```
+
+3. **Clear browser cache and cookies**
+
+4. **Check for clock skew** (server time vs. client time)
+
+### File Upload Failures
+
+**Symptoms**: Can't upload images or files
+
+**Solutions**:
+
+1. **Check volume permissions** (production.docker-compose.yml:34):
+   ```bash
+   # Docker - ensure proper ownership
+   sudo chown -R 1000:1000 apps/api/public
+   
+   # Standalone - ensure proper ownership
+   sudo chown -R www-data:www-data apps/api/public
+   ```
+
+2. **Verify volume mount**:
+   ```bash
+   # Check if volume is mounted
+   docker inspect snaily-cad-api | grep -A 5 Mounts
+   ```
+
+3. **Check disk space**:
+   ```bash
+   df -h
+   ```
+
+4. **Check upload limits** in reverse proxy configuration
+
+### Database Migration Errors
+
+**Error**: `Migration failed to apply`
+
+**Solutions**:
+
+1. **Check migration status**:
+   ```bash
+   cd apps/api
+   pnpm prisma migrate status
+   ```
+
+2. **Resolve migration conflicts**:
+   ```bash
+   # Mark migration as applied (if manually fixed)
+   pnpm prisma migrate resolve --applied "migration_name"
+   
+   # Mark migration as rolled back
+   pnpm prisma migrate resolve --rolled-back "migration_name"
+   ```
+
+3. **Reset database** (WARNING: destroys all data):
+   ```bash
+   pnpm prisma migrate reset
+   ```
+
+4. **Restore from backup** and reapply migrations:
+   See [Backup & Restore](/deployment/backup-restore) guide.
+
+## Performance Issues
+
+### Slow Database Queries
+
+**Solutions**:
+
+1. **Check database size**:
+   ```bash
+   docker exec snaily-cad-postgres psql -U postgres -d snaily-cad-v4 -c "SELECT pg_size_pretty(pg_database_size('snaily-cad-v4'));"
+   ```
+
+2. **Analyze slow queries**:
+   ```bash
+   # Enable query logging in PostgreSQL
+   # Check logs for slow queries
+   docker logs snaily-cad-postgres | grep "duration"
+   ```
+
+3. **Optimize database**:
+   ```bash
+   docker exec snaily-cad-postgres psql -U postgres -d snaily-cad-v4 -c "VACUUM ANALYZE;"
+   ```
+
+4. **Add database indexes** (check apps/api/prisma/schema.prisma for index opportunities)
+
+### High Memory Usage
+
+**Solutions**:
+
+1. **Check resource usage**:
+   ```bash
+   # Docker
+   docker stats
+   
+   # Standalone
+   pm2 monit
+   htop
+   ```
+
+2. **Limit container memory**:
+   ```yaml production.docker-compose.yml
+   services:
+     api:
+       # Add memory limit
+       mem_limit: 2g
+       mem_reservation: 1g
+   ```
+
+3. **Optimize Node.js memory**:
+   ```bash
+   # Increase heap size if needed
+   NODE_OPTIONS="--max-old-space-size=4096"
+   ```
+
+4. **Check for memory leaks** in application logs
+
+### Disk Space Full
+
+**Solutions**:
+
+1. **Check disk usage**:
+   ```bash
+   df -h
+   du -sh /var/lib/docker
+   du -sh ./.data  # PostgreSQL data
+   ```
+
+2. **Clean Docker resources**:
+   ```bash
+   # Remove unused images
+   docker image prune -a
+   
+   # Remove unused volumes
+   docker volume prune
+   
+   # Remove build cache
+   docker builder prune -a
+   ```
+
+3. **Clean old logs**:
+   ```bash
+   # Docker logs can grow large
+   truncate -s 0 /var/lib/docker/containers/*/*-json.log
+   ```
+
+4. **Clean old backups**:
+   ```bash
+   # Remove backups older than 30 days
+   find /backups -type f -mtime +30 -delete
+   ```
+
+## Update Issues
+
+### Build Fails After Update
+
+**Solutions**:
+
+1. **Clear build cache**:
+   ```bash
+   # Docker
+   docker builder prune -a
+   docker compose -f production.docker-compose.yml build --no-cache
+   
+   # Standalone
+   rm -rf node_modules
+   rm -rf apps/*/node_modules
+   rm -rf packages/*/node_modules
+   pnpm install
+   ```
+
+2. **Check Node version** (must be >= 18.16.0)
+
+3. **Update pnpm**:
+   ```bash
+   npm install -g pnpm@9.0.4
+   ```
+
+4. **Check for missing environment variables** in release notes
+
+### Containers Won't Start After Update
+
+**Solutions**:
+
+1. **Check logs**:
+   ```bash
+   docker compose -f production.docker-compose.yml logs
+   ```
+
+2. **Verify environment variables** match new requirements
+
+3. **Check database migrations**:
+   ```bash
+   docker logs snaily-cad-api | grep -i migration
+   ```
+
+4. **Rollback if necessary**:
+   See [Updating SnailyCAD](/deployment/updating#rollback-procedures)
+
+### Data Loss After Update
+
+<Warning>
+  If you didn't backup before updating, data recovery may be impossible.
+</Warning>
+
+**Solutions**:
+
+1. **Stop all services immediately**
+2. **Check if data still exists in database**:
+   ```bash
+   docker exec snaily-cad-postgres psql -U postgres -d snaily-cad-v4 -c "SELECT COUNT(*) FROM \"User\";"
+   ```
+3. **Restore from backup**: See [Backup & Restore](/deployment/backup-restore)
+4. **Contact support** on [Discord](https://discord.gg/eGnrPqEH7U) with detailed logs
+
+## Networking Issues
+
+### Reverse Proxy Not Working
+
+**Symptoms**: 502 Bad Gateway, can't access CAD through domain
+
+**Solutions**:
+
+1. **Verify containers are running**:
+   ```bash
+   docker ps
+   ```
+
+2. **Check reverse proxy configuration**:
+   - Nginx: `/etc/nginx/sites-available/snailycad`
+   - Apache: `/etc/apache2/sites-available/snailycad.conf`
+   - Caddy: `/etc/caddy/Caddyfile`
+
+3. **Verify proxy passes to correct ports**:
+   - Client: Port from `PORT_CLIENT` (.env.example:78)
+   - API: Port from `PORT_API` (.env.example:75)
+
+4. **Check firewall rules**:
+   ```bash
+   sudo ufw status
+   sudo iptables -L
+   ```
+
+### SSL/TLS Certificate Issues
+
+**Symptoms**: "Your connection is not private", SSL errors
+
+**Solutions**:
+
+1. **Verify certificate files exist**
+2. **Check certificate validity**:
+   ```bash
+   openssl x509 -in /path/to/cert.pem -noout -dates
+   ```
+3. **Renew Let's Encrypt certificate**:
+   ```bash
+   sudo certbot renew
+   ```
+4. **Update SECURE_COOKIES_FOR_IFRAME** (.env.example:70) only when using HTTPS
+
+### WebSocket Connection Failed
+
+**Symptoms**: Real-time updates not working, dispatch/live map issues
+
+**Solutions**:
+
+1. **Check WebSocket configuration** in reverse proxy
+2. **Verify Socket.IO connection** in browser console
+3. **Check firewall allows WebSocket connections**
+4. **Ensure reverse proxy passes WebSocket headers**:
+   ```nginx
+   proxy_http_version 1.1;
+   proxy_set_header Upgrade $http_upgrade;
+   proxy_set_header Connection "upgrade";
+   ```
+
+## Common Error Messages
+
+### "JWT_SECRET must be set"
+
+**Solution**: Set JWT_SECRET in .env.example:35:
+```bash
+JWT_SECRET="your-secure-random-string-here"
+```
+
+### "ENCRYPTION_TOKEN must be 32 characters"
+
+**Solution**: Generate and set 32-character token (.env.example:41):
+```bash
+ENCRYPTION_TOKEN="$(openssl rand -base64 32 | head -c 32)"
+```
+
+### "Database does not exist"
+
+**Solution**: Create the database:
+```bash
+docker exec snaily-cad-postgres psql -U postgres -c "CREATE DATABASE \"snaily-cad-v4\";"
+```
+
+### "Port is already allocated"
+
+**Solution**: Change port in .env or stop conflicting service:
+```bash
+# Find what's using the port
+sudo lsof -i :3000
+
+# Kill the process or change PORT_CLIENT in .env
+```
+
+### "Network cad_web not found"
+
+**Solution**: Create the network:
+```bash
+docker network create cad_web
+```
+
+### "Permission denied" on file uploads
+
+**Solution**: Fix permissions:
+```bash
+sudo chown -R 1000:1000 apps/api/public
+# or
+sudo chmod -R 755 apps/api/public
+```
+
+## Getting Help
+
+### Gathering Information
+
+When seeking help, provide:
+
+1. **Version information**:
+   ```bash
+   # SnailyCAD version (package.json:4)
+   cat package.json | grep version
+   
+   # Node version
+   node --version
+   
+   # Docker version (if applicable)
+   docker --version
+   ```
+
+2. **Error logs**:
+   ```bash
+   # Last 100 lines of API logs
+   docker logs --tail 100 snaily-cad-api
+   
+   # Last 100 lines of client logs
+   docker logs --tail 100 snaily-cad-client
+   ```
+
+3. **Environment** (Docker vs Standalone)
+4. **Installation method**
+5. **Recent changes** (updates, configuration changes)
+
+### Support Channels
+
+- **Discord**: [Join Discord](https://discord.gg/eGnrPqEH7U) - Active community support
+- **GitHub Issues**: [Report bugs](https://github.com/SnailyCAD/snaily-cadv4/issues)
+- **Documentation**: [docs.snailycad.org](https://docs.snailycad.org)
+
+### Before Asking for Help
+
+1. Check this troubleshooting guide
+2. Search existing GitHub issues
+3. Search Discord for similar problems
+4. Verify you're on the latest version
+5. Check your configuration against .env.example
+6. Review application logs
+
+## Preventive Maintenance
+
+### Regular Tasks
+
+1. **Backup regularly** - See [Backup & Restore](/deployment/backup-restore)
+2. **Update dependencies** - Keep Node.js, Docker, and PostgreSQL updated
+3. **Monitor disk space** - Ensure adequate free space
+4. **Review logs** - Check for warnings or errors
+5. **Test backups** - Verify restore procedures work
+6. **Update SnailyCAD** - Stay current with latest version
+
+### Health Checks
+
+```bash healthcheck.sh
+#!/bin/bash
+
+# Check if services are running
+if ! docker ps | grep -q snaily-cad-api; then
+    echo "ERROR: API container not running"
+    exit 1
+fi
+
+if ! docker ps | grep -q snaily-cad-client; then
+    echo "ERROR: Client container not running"
+    exit 1
+fi
+
+# Check if API responds
+if ! curl -f http://localhost:8080/v1/admin/manage/cad-settings > /dev/null 2>&1; then
+    echo "WARNING: API not responding"
+fi
+
+# Check disk space
+DISK_USAGE=$(df -h / | tail -1 | awk '{print $5}' | sed 's/%//')
+if [ $DISK_USAGE -gt 80 ]; then
+    echo "WARNING: Disk usage is ${DISK_USAGE}%"
+fi
+
+echo "Health check passed"
+```
+
+## Next Steps
+
+- [Updating SnailyCAD](/deployment/updating) - Keep your installation current
+- [Backup & Restore](/deployment/backup-restore) - Protect your data
+- [Environment Variables](/configuration/environment-variables) - Configuration reference
+- [Discord Support](https://discord.gg/eGnrPqEH7U) - Get help from the community

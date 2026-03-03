@@ -1,0 +1,405 @@
+---
+title: Standalone Installation
+description: Install SnailyCAD without Docker on a bare metal server
+---
+
+This guide covers installing SnailyCAD directly on your server without Docker. This method gives you more control but requires manual dependency management.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- [Node.js](https://nodejs.org/) version 18.16.0 or higher (20.x recommended)
+- [pnpm](https://pnpm.io/) version 9.0.4 or higher
+- [PostgreSQL](https://www.postgresql.org/) version 14 or higher
+- [Git](https://git-scm.com/downloads)
+- At least 4GB of RAM
+- At least 10GB of free disk space
+
+## Installation
+
+<Steps>
+  <Step title="Install Node.js">
+    Install Node.js 20.x using your package manager:
+
+    **Ubuntu/Debian:**
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    ```
+
+    **RHEL/CentOS/Fedora:**
+    ```bash
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+    sudo yum install -y nodejs
+    ```
+
+    Verify installation:
+    ```bash
+    node --version  # Should show v20.x.x
+    ```
+  </Step>
+
+  <Step title="Install pnpm">
+    Install pnpm globally:
+
+    ```bash
+    npm install -g pnpm
+    ```
+
+    Verify installation:
+    ```bash
+    pnpm --version  # Should show 9.0.4 or higher
+    ```
+  </Step>
+
+  <Step title="Install PostgreSQL">
+    Install and configure PostgreSQL:
+
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt-get update
+    sudo apt-get install -y postgresql postgresql-contrib
+    sudo systemctl start postgresql
+    sudo systemctl enable postgresql
+    ```
+
+    Create a database and user:
+    ```bash
+    sudo -u postgres psql
+    ```
+
+    In the PostgreSQL prompt:
+    ```sql
+    CREATE DATABASE "snaily-cad-v4";
+    CREATE USER snailycad WITH PASSWORD 'your-secure-password';
+    GRANT ALL PRIVILEGES ON DATABASE "snaily-cad-v4" TO snailycad;
+    \q
+    ```
+  </Step>
+
+  <Step title="Clone the repository">
+    Clone the SnailyCAD repository:
+
+    ```bash
+    git clone https://github.com/SnailyCAD/snaily-cadv4.git
+    cd snaily-cadv4
+    ```
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy the example environment file:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit the `.env` file and configure the following:
+
+    ```bash
+    # Database credentials
+    POSTGRES_PASSWORD="your-secure-password"
+    POSTGRES_USER="snailycad"
+    POSTGRES_DB="snaily-cad-v4"
+
+    # Database connection (use 'localhost' for standalone)
+    DB_HOST="localhost"
+    DB_PORT="5432"
+
+    # Security tokens
+    JWT_SECRET="your-random-jwt-secret"
+    ENCRYPTION_TOKEN="your-32-character-encryption-token"
+
+    # URLs (update with your domain or IP)
+    CORS_ORIGIN_URL="http://your-domain.com:3000"
+    NEXT_PUBLIC_CLIENT_URL="http://your-domain.com:3000"
+    NEXT_PUBLIC_PROD_ORIGIN="http://your-domain.com:8080/v1"
+
+    # Ports
+    PORT_API=8080
+    PORT_CLIENT=3000
+
+    # Environment
+    NODE_ENV="production"
+
+    # Database URL
+    DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?sslmode=prefer
+    ```
+
+    <Warning>
+      For standalone installations, ensure `DB_HOST="localhost"` (not "postgres").
+    </Warning>
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all project dependencies:
+
+    ```bash
+    pnpm install --frozen-lockfile
+    ```
+
+    This may take several minutes depending on your internet connection.
+  </Step>
+
+  <Step title="Build the application">
+    Build all packages and applications:
+
+    ```bash
+    pnpm run build
+    ```
+
+    This will:
+    - Generate the images domain configuration
+    - Build all workspace packages
+    - Build the API application
+    - Build the Client application
+
+    <Info>
+      The build process may take 10-15 minutes depending on your server's resources.
+    </Info>
+  </Step>
+
+  <Step title="Start the application">
+    Start both the API and Client servers:
+
+    ```bash
+    pnpm run start
+    ```
+
+    This runs the `start` script which concurrently starts:
+    - Client on port 3000 (or your configured `PORT_CLIENT`)
+    - API on port 8080 (or your configured `PORT_API`)
+
+    <Note>
+      The application will run in the foreground. Press `Ctrl+C` to stop it. See the Process Management section below for running it as a service.
+    </Note>
+  </Step>
+
+  <Step title="Access SnailyCAD">
+    Open your browser and navigate to:
+
+    - Client: `http://your-server-ip:3000`
+    - API: `http://your-server-ip:8080/v1`
+
+    Complete the initial setup wizard to create your admin account.
+  </Step>
+</Steps>
+
+## Process Management
+
+For production deployments, you should run SnailyCAD as a background service using a process manager.
+
+### Using PM2
+
+[PM2](https://pm2.keymetrics.io/) is a popular process manager for Node.js applications.
+
+#### Install PM2
+
+```bash
+npm install -g pm2
+```
+
+#### Start with PM2
+
+```bash
+# Start the application
+pm2 start pnpm --name "snailycad" -- start
+
+# Save the PM2 process list
+pm2 save
+
+# Set PM2 to start on system boot
+pm2 startup
+```
+
+#### Manage with PM2
+
+```bash
+# View status
+pm2 status
+
+# View logs
+pm2 logs snailycad
+
+# Restart
+pm2 restart snailycad
+
+# Stop
+pm2 stop snailycad
+
+# Remove from PM2
+pm2 delete snailycad
+```
+
+### Using systemd
+
+Alternatively, create a systemd service:
+
+```bash
+sudo nano /etc/systemd/system/snailycad.service
+```
+
+Add the following configuration:
+
+```ini
+[Unit]
+Description=SnailyCAD Service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/snaily-cadv4
+Environment="NODE_ENV=production"
+ExecStart=/usr/bin/pnpm start
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable snailycad
+sudo systemctl start snailycad
+```
+
+Manage the service:
+
+```bash
+# Check status
+sudo systemctl status snailycad
+
+# View logs
+sudo journalctl -u snailycad -f
+
+# Restart
+sudo systemctl restart snailycad
+
+# Stop
+sudo systemctl stop snailycad
+```
+
+## Updating SnailyCAD
+
+To update to the latest version:
+
+```bash
+# Stop the application
+pm2 stop snailycad  # or: sudo systemctl stop snailycad
+
+# Update the code
+git stash
+git pull
+
+# Install dependencies and rebuild
+pnpm install
+pnpm run build
+
+# Restart the application
+pm2 restart snailycad  # or: sudo systemctl start snailycad
+```
+
+Alternatively, use the built-in update script:
+
+```bash
+pm2 stop snailycad
+pnpm run full-start
+```
+
+This script will:
+1. Stash local changes
+2. Pull latest updates
+3. Install dependencies
+4. Copy environment files
+5. Build the application
+6. Start the application
+
+## Database Management
+
+### Backup Database
+
+```bash
+pg_dump -U snailycad -h localhost snaily-cad-v4 > backup.sql
+```
+
+### Restore Database
+
+```bash
+psql -U snailycad -h localhost snaily-cad-v4 < backup.sql
+```
+
+### Connect to Database
+
+```bash
+psql -U snailycad -h localhost -d snaily-cad-v4
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+Check what's using the port:
+
+```bash
+sudo lsof -i :3000
+sudo lsof -i :8080
+```
+
+Change ports in your `.env` file if needed.
+
+### Database Connection Failed
+
+Verify PostgreSQL is running:
+
+```bash
+sudo systemctl status postgresql
+```
+
+Test the connection:
+
+```bash
+psql -U snailycad -h localhost -d snaily-cad-v4
+```
+
+Check PostgreSQL logs:
+
+```bash
+sudo journalctl -u postgresql -f
+```
+
+### Build Failures
+
+Clear the build cache and try again:
+
+```bash
+rm -rf node_modules
+rm -rf apps/*/node_modules
+rm -rf packages/*/node_modules
+rm -rf apps/*/.next
+pnpm install --frozen-lockfile
+pnpm run build
+```
+
+### Out of Memory
+
+Increase Node.js memory limit:
+
+```bash
+export NODE_OPTIONS="--max-old-space-size=4096"
+pnpm run build
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Reverse Proxy Setup" icon="server" href="/deployment/reverse-proxy">
+    Configure nginx or Caddy for SSL and domain routing
+  </Card>
+  <Card title="Environment Variables" icon="gear" href="/configuration/environment-variables">
+    Complete environment variable reference
+  </Card>
+</CardGroup>

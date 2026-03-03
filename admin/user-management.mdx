@@ -1,0 +1,264 @@
+---
+title: User Management
+description: Manage users, roles, and permissions in SnailyCAD
+---
+
+## Overview
+
+The User Management interface allows administrators to view, edit, and manage all users in your SnailyCAD instance. You can control user permissions, assign roles, manage whitelist status, and perform administrative actions.
+
+## Accessing User Management
+
+Navigate to **Admin** > **Manage** > **Users** to access the user management interface.
+
+### Required Permissions
+
+To access user management, you need one of the following permissions:
+- `ViewUsers` - View user list
+- `ManageUsers` - Edit user details and permissions
+- `BanUsers` - Ban/unban users
+- `DeleteUsers` - Delete user accounts
+
+## User List Views
+
+The user management page has two tabs:
+
+### All Users Tab
+
+Displays all registered users in your CAD with the following information:
+- **Username** - User's login name
+- **Rank** - User rank (Owner, Admin, or User)
+- **Admin Permissions** - Whether user has admin access
+- **LEO Permissions** - Whether user has law enforcement access
+- **EMS/FD Permissions** - Whether user has emergency medical services access
+- **Dispatch Permissions** - Whether user has dispatch access
+- **Whitelist Status** - (If CAD is whitelisted) Acceptance status
+
+The table supports:
+- **Search** - Search by username, user ID, Steam ID, or Discord ID
+- **Sorting** - Sort by username, rank, or whitelist status
+- **Pagination** - Navigate through large user lists (35 users per page)
+
+### Pending Users Tab
+
+Shows users awaiting whitelist approval. Only visible when your CAD has whitelisting enabled.
+
+## Editing Users
+
+Click **Manage** next to a user to access their detailed settings.
+
+### Basic Information
+
+Edit the following user details:
+- **Username** - User's login name
+- **Steam ID** - Optional Steam account identifier
+- **Discord ID** - Optional Discord account identifier
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/users/[id].tsx
+```
+
+### Managing Permissions
+
+Click **Manage Permissions** to assign individual permissions to a user. SnailyCAD uses a detailed permission system with granular control over features:
+
+**Admin Permissions:**
+- `ViewUsers`, `ManageUsers`, `BanUsers`, `DeleteUsers`
+- `ViewCustomFields`, `ManageCustomFields`
+- `ViewCustomRoles`, `ManageCustomRoles`
+- `ManageCadSettings`
+- `ViewAuditLogs`
+
+**LEO Permissions:**
+- `Leo` - Access law enforcement features
+- `ViewIncidents`, `ManageIncidents`
+- `ManageRecords`
+- `ManagePenalCodes`
+
+**Dispatch Permissions:**
+- `Dispatch` - Access dispatch interface
+- `ManageActiveUnits`
+- `ManageTowCalls`
+
+**EMS/FD Permissions:**
+- `EmsFd` - Access emergency medical services
+
+<Note>
+  Owner rank users have all permissions by default and cannot be edited.
+</Note>
+
+### Managing Roles
+
+Click **Manage Roles** to assign custom roles to a user. Custom roles are predefined permission sets that can be applied to multiple users. See [Custom Roles](/admin/custom-roles) for more information.
+
+### API Token Area
+
+For users with API tokens:
+- View API token usage logs (last 35 requests)
+- **Revoke API Token** - Remove user's API access
+
+API tokens allow programmatic access to SnailyCAD's API endpoints.
+
+### Two-Factor Authentication
+
+Administrators can disable 2FA for users who have lost access:
+- Click **Disable 2FA** in the user's management page
+- This action is logged in the audit logs
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:637-665
+```
+
+## User Actions
+
+### Temporary Password
+
+Generate a temporary password for users who forgot their credentials:
+
+1. Navigate to the user's management page
+2. Click **Give Temp Password**
+3. Copy the generated password and share it securely with the user
+4. User must change the password on next login
+
+<Warning>
+  Temporary passwords are only displayed once. Make sure to copy them before closing the modal.
+</Warning>
+
+This action also disables the user's 2FA if enabled.
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:397-445
+```
+
+### Banning Users
+
+Ban users to prevent them from accessing the CAD:
+
+1. Navigate to the user's management page
+2. Scroll to the **Ban Area** section
+3. Click **Ban User**
+4. Provide a reason for the ban
+5. Click **Confirm**
+
+**Effects of banning:**
+- User is immediately disconnected from all sessions
+- User cannot log in until unbanned
+- Ban reason is visible to the user
+- Action is logged in audit logs
+
+**To unban:**
+1. Navigate to the banned user's page
+2. Click **Unban User**
+
+<Note>
+  You cannot ban yourself or users with Owner rank.
+</Note>
+
+### Deleting Users
+
+Permanently remove a user account:
+
+1. Navigate to the user's management page
+2. Scroll to the **Danger Zone** section
+3. Click **Delete User**
+4. Confirm the deletion
+
+<Warning>
+  User deletion is permanent and cannot be undone. All associated data (citizens, vehicles, records) will be deleted.
+</Warning>
+
+Deleting a user will:
+- Remove the user account
+- Delete all their citizens
+- Delete all citizen-owned vehicles and weapons
+- Delete all pet records
+- Disconnect the user from all sessions
+- Log the action in audit logs
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:504-557
+```
+
+### Whitelist Management
+
+For CADs with whitelisting enabled:
+
+**Accepting Users:**
+1. Go to the **Pending Users** tab
+2. Click **Manage** next to the pending user
+3. Click **Accept this user**
+
+**Declining Users:**
+1. Go to the **Pending Users** tab
+2. Click **Manage** next to the pending user
+3. Click **Decline**
+
+Whitelist status changes trigger Discord webhooks if configured.
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:559-603
+```
+
+## Pruning Inactive Users
+
+Remove inactive users in bulk:
+
+1. Click **Prune Users** button
+2. Set the inactivity threshold (default: 30 days)
+3. Review the list of users who haven't logged in within the threshold
+4. Select users to delete
+5. Click **Prune Selected Users**
+
+**Safety measures:**
+- Owner rank users are never included in pruning
+- Shows last seen date for each user
+- Allows manual selection before deletion
+- Logs the action in audit logs
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-users-controller.ts:116-190
+```
+
+## User Search
+
+Search for users using:
+- **Username** - Partial match, case-insensitive
+- **User ID** - Exact match
+- **Steam ID** - Exact match
+- **Discord ID** - Exact match
+
+The search box is available on both All Users and Pending Users tabs.
+
+## Best Practices
+
+1. **Use Custom Roles** - Instead of assigning permissions individually, create custom roles for common permission sets
+2. **Document Ban Reasons** - Always provide clear ban reasons for transparency
+3. **Regular Pruning** - Periodically prune inactive users to maintain database performance
+4. **Audit Log Review** - Regularly review audit logs for user management actions
+5. **Whitelist Promptly** - Process pending users quickly to improve user experience
+
+## Troubleshooting
+
+### User Cannot Log In
+
+- Check if the user is banned
+- Verify whitelist status (if enabled)
+- Check if the account exists in All Users
+
+### Permissions Not Working
+
+- Verify permissions are saved (check audit logs)
+- Ensure custom roles have the correct permissions
+- Remember that role permissions override individual permissions
+- Owner rank always has all permissions
+
+### Cannot Edit Owner
+
+- Owner rank users cannot be edited for security reasons
+- Transfer ownership through database if needed
+
+## Related Documentation
+
+- [Custom Roles](/admin/custom-roles) - Learn about role-based permissions
+- [Audit Logs](/admin/audit-logs) - Review user management actions
+- [CAD Settings](/configuration/cad-settings) - Configure whitelist and authentication

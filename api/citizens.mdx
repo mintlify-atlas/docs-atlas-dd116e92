@@ -1,0 +1,448 @@
+---
+title: Citizens
+description: Manage citizens, vehicles, weapons, and licenses
+---
+
+## Overview
+
+The Citizens API provides endpoints for creating and managing citizens, their vehicles, weapons, medical records, and licenses.
+
+<Info>
+All citizen endpoints require authentication. Some endpoints may be restricted based on CAD features and user permissions.
+</Info>
+
+---
+
+## Get Citizens
+
+<CodeGroup>
+```bash GET /api/citizen
+curl -X GET "https://your-cad.com/api/citizen?query=John&skip=0" \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all citizens belonging to the authenticated user.
+
+### Query Parameters
+
+<ParamField query="query" type="string">
+  Search by name, surname, SSN, or phone number
+</ParamField>
+
+<ParamField query="skip" type="number" default="0">
+  Number of records to skip for pagination
+</ParamField>
+
+### Response
+
+<ResponseField name="citizens" type="array">
+  Array of citizen objects
+</ResponseField>
+
+<ResponseField name="totalCount" type="number">
+  Total number of citizens matching the query
+</ResponseField>
+
+---
+
+## Get Citizen by ID
+
+<CodeGroup>
+```bash GET /api/citizen/:id
+curl -X GET https://your-cad.com/api/citizen/{citizenId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get detailed information about a specific citizen.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Citizen ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  First name
+</ResponseField>
+
+<ResponseField name="surname" type="string">
+  Last name
+</ResponseField>
+
+<ResponseField name="socialSecurityNumber" type="string">
+  Social security number
+</ResponseField>
+
+<ResponseField name="dateOfBirth" type="string">
+  Date of birth (ISO 8601)
+</ResponseField>
+
+<ResponseField name="gender" type="object">
+  Gender value object
+</ResponseField>
+
+<ResponseField name="ethnicity" type="object">
+  Ethnicity value object
+</ResponseField>
+
+<ResponseField name="driversLicense" type="object">
+  Driver's license status
+</ResponseField>
+
+<ResponseField name="weaponLicense" type="object">
+  Weapon license status
+</ResponseField>
+
+<ResponseField name="vehicles" type="array">
+  Citizen's registered vehicles (first 12)
+</ResponseField>
+
+<ResponseField name="weapons" type="array">
+  Citizen's registered weapons (first 12)
+</ResponseField>
+
+<ResponseField name="medicalRecords" type="array">
+  Medical records
+</ResponseField>
+
+---
+
+## Create Citizen
+
+<CodeGroup>
+```bash POST /api/citizen
+curl -X POST https://your-cad.com/api/citizen \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John",
+    "surname": "Doe",
+    "dateOfBirth": "1990-01-15",
+    "gender": "male-gender-id",
+    "ethnicity": "ethnicity-id",
+    "weight": "180",
+    "height": "72",
+    "hairColor": "brown",
+    "eyeColor": "blue",
+    "address": "123 Main St",
+    "phoneNumber": "555-0123"
+  }'
+```
+</CodeGroup>
+
+Create a new citizen.
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  First name
+</ParamField>
+
+<ParamField body="surname" type="string" required>
+  Last name
+</ParamField>
+
+<ParamField body="dateOfBirth" type="string" required>
+  Date of birth (ISO 8601 format)
+</ParamField>
+
+<ParamField body="gender" type="string" required>
+  Gender value ID
+</ParamField>
+
+<ParamField body="ethnicity" type="string" required>
+  Ethnicity value ID
+</ParamField>
+
+<ParamField body="weight" type="string">
+  Weight
+</ParamField>
+
+<ParamField body="height" type="string">
+  Height
+</ParamField>
+
+<ParamField body="hairColor" type="string">
+  Hair color
+</ParamField>
+
+<ParamField body="eyeColor" type="string">
+  Eye color
+</ParamField>
+
+<ParamField body="address" type="string">
+  Residential address
+</ParamField>
+
+<ParamField body="phoneNumber" type="string">
+  Phone number
+</ParamField>
+
+<ParamField body="socialSecurityNumber" type="string">
+  Social security number (auto-generated if not provided)
+</ParamField>
+
+### Response
+
+Returns the created citizen object with all fields.
+
+### Error Responses
+
+- `400` - Invalid data, blacklisted name, or duplicate name (if not allowed)
+- `400` - Maximum citizens per user reached
+
+---
+
+## Update Citizen
+
+<CodeGroup>
+```bash PUT /api/citizen/:id
+curl -X PUT https://your-cad.com/api/citizen/{citizenId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John",
+    "surname": "Smith",
+    "address": "456 Oak Ave"
+  }'
+```
+</CodeGroup>
+
+Update an existing citizen's information.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Request Body
+
+All fields are optional. Only provided fields will be updated.
+
+<ParamField body="name" type="string">
+  First name
+</ParamField>
+
+<ParamField body="surname" type="string">
+  Last name
+</ParamField>
+
+<ParamField body="dateOfBirth" type="string">
+  Date of birth
+</ParamField>
+
+<ParamField body="address" type="string">
+  Residential address
+</ParamField>
+
+<ParamField body="phoneNumber" type="string">
+  Phone number
+</ParamField>
+
+---
+
+## Delete Citizen
+
+<CodeGroup>
+```bash DELETE /api/citizen/:id
+curl -X DELETE https://your-cad.com/api/citizen/{citizenId} \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Delete a citizen permanently.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Response
+
+Returns `true` on success.
+
+### Error Responses
+
+- `403` - Only admins can delete citizens (if feature is disabled)
+- `404` - Citizen not found
+
+---
+
+## Mark Citizen as Deceased
+
+<CodeGroup>
+```bash POST /api/citizen/:id/deceased
+curl -X POST https://your-cad.com/api/citizen/{citizenId}/deceased \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Mark a citizen as deceased.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Response
+
+Returns `true` on success and triggers a Discord webhook if configured.
+
+---
+
+## Upload Citizen Image
+
+<CodeGroup>
+```bash POST /api/citizen/:id
+curl -X POST https://your-cad.com/api/citizen/{citizenId} \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -F "image=@/path/to/image.jpg"
+```
+</CodeGroup>
+
+Upload an image for a citizen.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Request Body
+
+<ParamField body="image" type="file" required>
+  Image file (JPEG, PNG, WebP)
+</ParamField>
+
+### Response
+
+<ResponseField name="imageId" type="string">
+  ID of the uploaded image
+</ResponseField>
+
+---
+
+## Get Citizen Records
+
+<CodeGroup>
+```bash GET /api/citizen/:id/records
+curl -X GET https://your-cad.com/api/citizen/{citizenId}/records \
+  -H "Cookie: snaily-cad-access-token=<token>"
+```
+</CodeGroup>
+
+Get all criminal/traffic records for a citizen.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  Citizen ID
+</ParamField>
+
+### Response
+
+Returns an array of record objects including:
+- Arrest reports
+- Traffic citations
+- Written warnings
+- Associated violations and penalties
+
+---
+
+## Vehicles
+
+### Register Vehicle
+
+<CodeGroup>
+```bash POST /api/vehicles
+curl -X POST https://your-cad.com/api/vehicles \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "plate": "ABC123",
+    "model": "vehicle-model-id",
+    "color": "red",
+    "registrationStatus": "registration-status-id"
+  }'
+```
+</CodeGroup>
+
+#### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID who owns the vehicle
+</ParamField>
+
+<ParamField body="plate" type="string" required>
+  License plate number
+</ParamField>
+
+<ParamField body="model" type="string" required>
+  Vehicle model ID
+</ParamField>
+
+<ParamField body="color" type="string" required>
+  Vehicle color
+</ParamField>
+
+<ParamField body="registrationStatus" type="string" required>
+  Registration status ID
+</ParamField>
+
+<ParamField body="insuranceStatus" type="string">
+  Insurance status ID
+</ParamField>
+
+<ParamField body="vinNumber" type="string">
+  VIN number
+</ParamField>
+
+---
+
+## Weapons
+
+### Register Weapon
+
+<CodeGroup>
+```bash POST /api/weapons
+curl -X POST https://your-cad.com/api/weapons \
+  -H "Cookie: snaily-cad-access-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "citizenId": "citizen-id",
+    "model": "weapon-model-id",
+    "registrationStatus": "registration-status-id",
+    "serialNumber": "SN123456"
+  }'
+```
+</CodeGroup>
+
+#### Request Body
+
+<ParamField body="citizenId" type="string" required>
+  Citizen ID who owns the weapon
+</ParamField>
+
+<ParamField body="model" type="string" required>
+  Weapon model ID
+</ParamField>
+
+<ParamField body="registrationStatus" type="string" required>
+  Registration status ID
+</ParamField>
+
+<ParamField body="serialNumber" type="string">
+  Weapon serial number
+</ParamField>

@@ -1,0 +1,331 @@
+---
+title: Live Map
+description: Configure the real-time map interface for tracking units and players
+---
+
+The Live Map feature provides real-time visualization of player positions, unit locations, and active calls on an interactive map interface.
+
+## Overview
+
+The Live Map displays:
+
+- Player positions from connected FiveM servers
+- Active units (LEO, EMS/FD) with their current status
+- Active 911 calls and incidents
+- Smart signs and motorway signs
+- Custom map tiles for specific game maps
+
+## Prerequisites
+
+- SnailyCAD v4 installed and running
+- FiveM server with SnailyCAD integration (for player tracking)
+- Admin access to SnailyCAD
+
+## Configuring Live Map URLs
+
+Connect your FiveM servers to the live map.
+
+<Steps>
+  <Step title="Navigate to Live Map Settings">
+    Go to **Admin** > **Manage** > **CAD Settings** > **Live Map**.
+  </Step>
+
+  <Step title="Add Server URL">
+    Click **Add URL** and configure:
+    
+    - **Name**: Friendly name for your server (e.g., "Main Server", "Test Server")
+    - **URL**: WebSocket URL of your FiveM server
+    
+    Example URLs:
+    ```
+    http://192.168.1.100:30120
+    https://fivem.yourdomain.com
+    ws://your-fivem-server:30120
+    ```
+  </Step>
+
+  <Step title="Save Configuration">
+    Click **Save** to add the server. You can add multiple servers for different game servers.
+  </Step>
+
+  <Step title="Test Connection">
+    Navigate to **Dispatch** > **Live Map** and:
+    1. Select your server from the dropdown menu
+    2. Verify connection status shows as "Connected"
+    3. Confirm players appear on the map (if any are online)
+  </Step>
+</Steps>
+
+### Multiple Server Configuration
+
+You can configure multiple FiveM servers for different purposes:
+
+- **Main Server**: Primary roleplay server
+- **Training Server**: For training new members
+- **Development Server**: For testing new features
+
+Dispatchers can switch between servers using the server selector dropdown on the Live Map interface.
+
+## Custom Map Tiles
+
+Customize the map appearance by uploading custom tiles for different game maps (e.g., custom cities, maps beyond default GTA V).
+
+### Understanding Map Tiles
+
+SnailyCAD uses a tiled map system with 6 tiles arranged in a 2x3 grid:
+
+```
+minimap_sea_0_0.png  minimap_sea_0_1.png
+minimap_sea_1_0.png  minimap_sea_1_1.png
+minimap_sea_2_0.png  minimap_sea_2_1.png
+```
+
+### Preparing Map Tiles
+
+<Steps>
+  <Step title="Extract Game Map">
+    Use a tool like [GTAUtil](https://github.com/sk1ds/gtautil) or similar to extract your game's minimap:
+    
+    1. Extract the minimap files from your game resources
+    2. The files should be named `minimap_sea_X_Y.png` where X and Y are grid coordinates
+    3. All 6 tiles are required (0_0, 0_1, 1_0, 1_1, 2_0, 2_1)
+  </Step>
+
+  <Step title="Verify Tile Format">
+    Ensure your tiles meet these requirements:
+    
+    - **Format**: PNG or JPG
+    - **Naming**: Exactly `minimap_sea_X_Y` (without extension)
+    - **Count**: All 6 tiles must be present
+    - **Size**: Recommended 1024x1024 or 2048x2048 per tile
+  </Step>
+
+  <Step title="Upload Tiles">
+    In the Live Map settings:
+    
+    1. Scroll to the **Map Tiles** section
+    2. Click the file input to select all 6 tile files
+    3. The system will validate file names
+    4. Click **Save** to upload
+  </Step>
+
+  <Step title="Wait for Processing">
+    The tiles will be:
+    1. Uploaded to the server
+    2. Converted to WebP format for optimization
+    3. Saved to the client's public directory
+    
+    This may take a few minutes. **Do not close the page** during upload.
+  </Step>
+</Steps>
+
+<Warning>
+  **Important**: Uploading new map tiles will overwrite existing tiles. Make sure to backup your current tiles before uploading new ones.
+</Warning>
+
+### Tile File Permissions
+
+The SnailyCAD server needs write permissions to the client's public directory:
+
+```bash
+# For Docker installations
+chmod -R 755 /path/to/snailycad/apps/client/public/tiles/
+
+# For standalone installations
+chmod -R 755 ./apps/client/public/tiles/
+```
+
+If you encounter permission errors, verify the SnailyCAD process has write access to this directory.
+
+## Using the Live Map
+
+### Dispatcher Interface
+
+<Steps>
+  <Step title="Access Live Map">
+    Navigate to **Dispatch** > **Live Map** from the main navigation.
+  </Step>
+
+  <Step title="Select Server">
+    If you have multiple servers configured, select one from the dropdown at the top.
+  </Step>
+
+  <Step title="View Players">
+    - **Player Icons**: Show all connected players from FiveM
+    - **Color Coding**: Different colors for LEO, EMS/FD, civilian
+    - **Click for Details**: Click any player to see their information
+  </Step>
+
+  <Step title="Monitor Units">
+    - Active units show with their callsign
+    - Unit status is indicated by color
+    - Click a unit to see full details
+  </Step>
+
+  <Step title="Track Calls">
+    - Active 911 calls appear as markers
+    - Click a call to view details
+    - Assigned units show routing lines
+  </Step>
+</Steps>
+
+### Map Controls
+
+- **Zoom**: Mouse wheel or +/- buttons
+- **Pan**: Click and drag
+- **Center**: Double-click to center on a player/unit
+- **Filter**: Toggle player types, units, calls on/off
+- **Search**: Search for specific players or units
+
+## WebSocket Connection
+
+### Connection Status
+
+The Live Map shows connection status in the top-right:
+
+- **Connected** (Green): Successfully connected to FiveM server
+- **Connecting** (Yellow): Attempting to establish connection
+- **Disconnected** (Red): Not connected to server
+
+### Reconnection Behavior
+
+The Live Map automatically attempts to reconnect if the connection drops:
+
+1. Initial connection attempt
+2. If failed, retry every 5 seconds
+3. Maximum 10 retry attempts
+4. Manual reconnection available via "Reconnect" button
+
+## Data Synchronization
+
+### Player Data Updates
+
+Player positions update based on FiveM server configuration:
+
+- **Position**: Updated every 500ms (default)
+- **Vehicle**: Updated when changed
+- **Identifiers**: Updated on connection
+
+### Unit Linking
+
+Players are automatically linked to their active units:
+
+1. FiveM sends player identifiers (Steam ID, Discord ID)
+2. SnailyCAD matches identifiers to user accounts
+3. Active units for that user are displayed on the map
+4. Unit information updates in real-time via SnailyCAD websockets
+
+## Troubleshooting
+
+### Connection Issues
+
+**Cannot Connect to Server**
+
+1. Verify the server URL is correct
+2. Check that the FiveM server is running
+3. Ensure WebSocket port is accessible (not blocked by firewall)
+4. Test connectivity: `telnet your-server-ip 30120`
+
+**Connection Drops Frequently**
+
+1. Check network stability between CAD and FiveM server
+2. Verify FiveM server isn't under heavy load
+3. Increase WebSocket timeout in FiveM resource config
+4. Check for firewall rules blocking WebSocket connections
+
+### Players Not Showing
+
+**No Players Appear**
+
+1. Verify FiveM integration resource is running
+2. Check resource is sending player data (review FiveM console)
+3. Ensure at least one player is connected to FiveM server
+4. Verify API URL in FiveM resource config is correct
+
+**Players Show But Not Linked to Units**
+
+1. Check players have linked their Discord or Steam accounts in SnailyCAD
+2. Verify identifiers are being sent from FiveM
+3. Ensure users have active units in the CAD
+4. Check that unit status is not "Off Duty"
+
+### Map Tile Issues
+
+**Tiles Not Loading**
+
+1. Verify tiles were uploaded successfully
+2. Check file permissions on `apps/client/public/tiles/`
+3. Clear browser cache and reload
+4. Inspect browser console for 404 errors on tile files
+
+**Tiles Appear Distorted**
+
+1. Verify all 6 tiles are present
+2. Check tiles are same resolution
+3. Ensure tiles are in correct order (0_0, 0_1, etc.)
+4. Re-upload tiles if corruption suspected
+
+**Upload Fails**
+
+1. Check server has write permissions to tiles directory
+2. Verify all 6 tiles are selected
+3. Check tile file names match exactly: `minimap_sea_X_Y`
+4. Review server logs for specific error messages
+5. Check available disk space on server
+
+### Performance Issues
+
+**Map Loads Slowly**
+
+1. Optimize tile file sizes (use WebP or compressed PNG)
+2. Reduce tile resolution if too large
+3. Check server bandwidth
+4. Enable CDN for static assets if available
+
+**High CPU Usage**
+
+1. Reduce player update frequency in FiveM config
+2. Limit number of concurrent players displayed
+3. Disable unnecessary map features (e.g., smart signs if unused)
+4. Use hardware acceleration in browser settings
+
+## API Endpoints
+
+For developers integrating with the Live Map:
+
+- `PUT /admin/manage/cad-settings/live-map` - Update live map settings
+- `PUT /admin/manage/cad-settings/live-map/tiles` - Upload map tiles
+- `POST /dispatch/players` - Fetch player/unit data for map display
+
+## Security Considerations
+
+<Warning>
+  - Ensure WebSocket connections use WSS (secure) in production
+  - Limit access to Live Map based on user permissions
+  - Do not expose internal server IPs publicly
+  - Use reverse proxy for WebSocket connections if possible
+</Warning>
+
+### Restricting Access
+
+Configure which roles can access the Live Map:
+
+1. Go to **Admin** > **Manage** > **Permissions**
+2. Configure "View Live Map" permission
+3. Assign to Dispatch, LEO, EMS/FD roles as needed
+
+## Best Practices
+
+1. **Test with Development Server**: Set up a test FiveM server before production
+2. **Monitor Performance**: Watch server load when many players are connected
+3. **Backup Tiles**: Keep backups of custom map tiles
+4. **Document Server URLs**: Maintain a list of all configured servers
+5. **Use HTTPS/WSS**: Always use secure connections in production
+6. **Optimize Updates**: Balance update frequency with performance needs
+7. **Regular Testing**: Periodically verify all servers connect properly
+
+## Related Documentation
+
+- [FiveM Integration](/integrations/fivem) - Set up FiveM server integration
+- [Discord Integration](/integrations/discord) - Configure Discord features
+- [Dispatch Guide](/guides/dispatch) - Learn to use the dispatch interface

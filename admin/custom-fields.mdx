@@ -1,0 +1,264 @@
+---
+title: Custom Fields
+description: Configure custom fields for citizens, vehicles, and weapons
+---
+
+## Overview
+
+Custom Fields allow you to extend the default data structure of SnailyCAD by adding additional fields to citizens, vehicles, and weapons. This enables you to collect community-specific information that isn't included in the base system.
+
+## Accessing Custom Fields
+
+Navigate to **Admin** > **Manage** > **Custom Fields** to access the custom fields management interface.
+
+### Required Permissions
+
+- `ViewCustomFields` - View custom fields
+- `ManageCustomFields` - Create, edit, and delete custom fields
+
+## Understanding Custom Fields
+
+Custom fields appear as text input fields on the relevant creation/edit forms:
+- **CITIZEN** - Appears on citizen creation/edit forms
+- **VEHICLE** - Appears on vehicle registration forms
+- **WEAPON** - Appears on weapon registration forms
+
+Each custom field consists of:
+- **Name** - The field label shown to users
+- **Category** - Where the field appears (Citizen, Vehicle, or Weapon)
+- **Citizen Editable** - Whether citizens can edit this field (admin-only otherwise)
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/custom-fields.tsx:27-161
+```
+
+## Creating Custom Fields
+
+1. Click **Create Custom Field**
+2. Enter the field details:
+   - **Name** - Descriptive label (e.g., "Height", "Hair Color", "Vehicle Modification")
+   - **Category** - Select CITIZEN, VEHICLE, or WEAPON
+   - **Citizen Editable** - Check if citizens should be able to edit this field
+3. Click **Create**
+
+The custom field will immediately appear on the relevant forms.
+
+### Example: Adding Height to Citizens
+
+```
+Name: Height
+Category: CITIZEN
+Citizen Editable: ✓ (checked)
+```
+
+After creation, users will see a "Height" field when creating or editing citizens.
+
+## Editing Custom Fields
+
+1. Click **Edit** next to the custom field
+2. Modify the field details
+3. Click **Save**
+
+<Note>
+  Editing a field name updates the label everywhere it appears. Existing data is preserved.
+</Note>
+
+## Deleting Custom Fields
+
+1. Click **Delete** next to the custom field
+2. Confirm deletion
+
+<Warning>
+  Deleting a custom field removes all data stored in that field for all citizens, vehicles, or weapons. This action cannot be undone.
+</Warning>
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-fields-controller.ts:109-138
+```
+
+## Field Categories
+
+### CITIZEN Category
+
+Fields appear on:
+- Citizen creation page (`/citizen/create`)
+- Citizen edit page (`/citizen/[id]`)
+- LEO-editable citizen profiles (if enabled)
+
+Common uses:
+- Physical attributes (height, weight, hair color, eye color)
+- Background information (birthplace, occupation)
+- Character details (accent, scars, tattoos)
+
+### VEHICLE Category
+
+Fields appear on:
+- Vehicle registration page (`/citizen/[id]/vehicles/create`)
+- Vehicle edit page (`/citizen/[id]/vehicles/[vehicleId]`)
+
+Common uses:
+- Vehicle modifications (tint level, exhaust type)
+- Custom features (racing stripes, decals)
+- Technical details (engine size, transmission)
+
+### WEAPON Category
+
+Fields appear on:
+- Weapon registration page (`/citizen/[id]/weapons/create`)
+- Weapon edit page (`/citizen/[id]/weapons/[weaponId]`)
+
+Common uses:
+- Serial number verification
+- Modification details (suppressor, scope)
+- Acquisition information (purchase date, seller)
+
+## Citizen Editable Option
+
+The "Citizen Editable" checkbox controls who can modify the field:
+
+**When Checked:**
+- Citizens can edit the field on their own records
+- Admins and LEO (with permissions) can also edit
+- Useful for fields like physical description that citizens manage
+
+**When Unchecked:**
+- Only admins can edit the field
+- Citizens see the field value but cannot change it
+- Useful for administrative fields like background check status
+
+## Search and Filtering
+
+The custom fields list supports:
+- **Search** - Filter by field name
+- **Pagination** - 35 fields per page
+- **Real-time search** - Results update as you type
+
+```tsx
+// Source: apps/client/src/pages/admin/manage/custom-fields.tsx:103-107
+```
+
+## Data Storage
+
+Custom field data is stored as key-value pairs:
+
+```json
+{
+  "Height": "6'2\"",
+  "Hair Color": "Brown",
+  "Eye Color": "Blue"
+}
+```
+
+This allows:
+- Flexible field addition/removal
+- No database migrations required
+- Easy data export/import
+
+## Use Cases
+
+### Roleplay Servers
+
+Add immersive character details:
+- Accent/Dialect
+- Character backstory
+- Family members
+- Criminal affiliations
+
+### Law Enforcement
+
+Track additional information:
+- Background check status
+- Risk assessment level
+- Known associates
+- Gang affiliation
+
+### Vehicle Management
+
+Record customization details:
+- Window tint percentage
+- Paint job description
+- Performance modifications
+- Commercial vehicle permit
+
+### Weapon Registry
+
+Track weapon-specific data:
+- Purchase location
+- Previous owner
+- Permit number
+- Caliber/ammunition type
+
+## Audit Logging
+
+All custom field operations are logged:
+- `CustomFieldCreate` - Field created
+- `CustomFieldUpdate` - Field modified
+- `CustomFieldDelete` - Field deleted
+
+See [Audit Logs](/admin/audit-logs) to review these actions.
+
+```tsx
+// Source: apps/api/src/controllers/admin/manage/manage-custom-fields-controller.ts:62-66
+```
+
+## API Integration
+
+Custom fields are included in API responses:
+
+**GET /citizen/:id**
+```json
+{
+  "id": "...",
+  "name": "John Doe",
+  "customFields": {
+    "Height": "6'2\"",
+    "Hair Color": "Brown"
+  }
+}
+```
+
+This allows third-party integrations to access custom field data.
+
+## Best Practices
+
+1. **Descriptive Names** - Use clear, self-explanatory field names
+2. **Consistent Categories** - Group related fields in the same category
+3. **Limit Fields** - Too many fields overwhelm users; add only what's necessary
+4. **Citizen Editable** - Make fields editable unless they require admin control
+5. **Documentation** - Document custom fields for your community (what they mean, how to fill them)
+
+## Limitations
+
+- Custom fields are text-only (no dropdowns, checkboxes, etc.)
+- No validation rules (any text is accepted)
+- No conditional fields (all fields always visible)
+- No multi-select or structured data
+
+For more complex needs, consider:
+- Using existing value types for dropdowns
+- Requesting new features on [GitHub](https://github.com/SnailyCAD/snaily-cadv4)
+
+## Troubleshooting
+
+### Field Not Appearing
+
+- **Wrong Category**: Verify the category matches where you're looking
+- **Cache**: Clear browser cache and refresh
+- **Permissions**: Ensure you have view permissions
+
+### Cannot Delete Field
+
+- **In Use**: The field may be in use (should still delete, but check)
+- **Permissions**: Verify you have `ManageCustomFields` permission
+
+### Data Not Saving
+
+- **Field Name**: Ensure field name matches exactly (case-sensitive)
+- **Permissions**: Check citizen editable setting
+- **Browser Console**: Check for JavaScript errors
+
+## Related Documentation
+
+- [Values](/admin/values) - Manage dropdown options
+- [Citizen Management](/guides/citizens) - How citizens use custom fields
+- [Audit Logs](/admin/audit-logs) - Review custom field changes
